@@ -14,6 +14,7 @@ docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEV
   bash -c '
 set -e
 /opt/venv312/bin/python /workspace/tests/test_torch_scatter.py
+/opt/venv312/bin/python /workspace/tests/test_openequivariance.py
 /opt/venv312/bin/pip install -q pytest hypothesis expecttest optree psutil
 cd /workspace
 

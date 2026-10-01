@@ -20,8 +20,9 @@ C++17 device), and the optimization targets (`-march=native`, `sm_35` + `sm_50` 
 - **Distributed:** NCCL 2.23.4 ([kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler),
   memory-pool fallback for Kepler/Maxwell), Gloo, OpenMPI 4.1.2.
 - **Atomistic ML:** metatensor-torch 0.10.6 and metatomic-torch 0.1.18 (C++ library + Python), compiled
-  against this PyTorch. torch_scatter 2.1.2 compiled from source for Kepler + Maxwell. ASE, vesin,
-  warp-lang, orb-models, pymatgen and others are pinned in [`docker/requirements.txt`](docker/requirements.txt).
+  against this PyTorch. torch_scatter 2.1.2 compiled from source for Kepler + Maxwell. OpenEquivariance 0.7.0
+  ([kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler)) with CUDA 11 Driver API
+  fallback and multi-device kernel caching. ASE, vesin, warp-lang, orb-models, pymatgen and others are pinned in [`docker/requirements.txt`](docker/requirements.txt).
 - **Multi-user entrypoint:** the container runs as the owner of the mounted `/workspace`
   (see [`docs/MULTIUSER.md`](docs/MULTIUSER.md)).
 
@@ -50,11 +51,12 @@ pytorch-iapetus/
 │   ├── build_nccl.sh         # NCCL from third_party/nccl (used by builder.Dockerfile)
 │   ├── build_magma.sh        # MAGMA from the pinned ICL tarball (used by builder.Dockerfile)
 │   ├── build_torch_scatter.sh# torch_scatter from third_party/pytorch_scatter
+│   ├── build_openequivariance.sh # OpenEquivariance from third_party/openequivariance
 │   ├── build_metatomic_torch.sh
 │   └── build_warp_cpu.sh     # optional CPU-only warp rebuild for driver 470
-├── tests/                    # test_magma / test_metatomic / distributed / unit-test runners
+├── tests/                    # test_magma / test_metatomic / test_torch_scatter / test_openequivariance / distributed runners
 ├── docs/                     # USAGE.md, MULTIUSER.md, BUGS.md
-├── third_party/              # submodules: pytorch (fork), nccl (fork), pytorch_scatter (upstream)
+├── third_party/              # submodules: pytorch (fork), nccl (fork), pytorch_scatter (upstream), openequivariance (fork)
 ├── dist/                     # wheels (git-ignored)
 └── archive/                  # history; large legacy artifacts are git-ignored
 ```
@@ -97,6 +99,8 @@ docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(
   iapetus/pytorch:2.14.0-cuda11.8-py312 python tests/test_magma.py
 docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
   iapetus/pytorch:2.14.0-cuda11.8-py312 python tests/test_metatomic.py
+docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
+  iapetus/pytorch:2.14.0-cuda11.8-py312 python tests/test_openequivariance.py
 tests/run_unit_tests.sh
 tests/run_distributed_tests.sh
 ```

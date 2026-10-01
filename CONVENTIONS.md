@@ -43,6 +43,7 @@ commit, or a release URL plus sha256 checked in the build script.
 | PyTorch 2.14.0 | [kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.0-kepler) → `third_party/pytorch` | branch `v2.14.0-kepler` | yes |
 | NCCL 2.23.4 | [kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler) → `third_party/nccl` | branch `v2.23.4-kepler` | yes |
 | torch_scatter 2.1.2 | upstream `rusty1s/pytorch_scatter` → `third_party/pytorch_scatter` (`scripts/build_torch_scatter.sh`) | commit `f514c10` | no (unpatched) |
+| OpenEquivariance 0.7.0 | [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) → `third_party/openequivariance` (`scripts/build_openequivariance.sh`) | branch `v0.7.0-kepler` | yes |
 | MAGMA 2.10.0 | ICL release tarball (`scripts/build_magma.sh`) | sha256 | no |
 | metatomic-torch 0.1.18 | PyPI sdist (`scripts/build_metatomic_torch.sh`) | sha256 | no |
 | metatensor-torch 0.10.6 | PyPI sdist (`scripts/build_metatomic_torch.sh`) | version | no |
@@ -104,4 +105,5 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | `torch.utils.cpp_extension` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): defaults nvcc to `-std=c++17` on CUDA < 12 and uses `$CUDAHOSTCXX` for `-ccbin` |
 | `torch/csrc/autograd/edge.h` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): uses `static_cast<bool>(function)` and adds `operator!=`/`==` with `nullptr` in `intrusive_ptr.h` for C++17 compatibility |
 | `torch_scatter` 2.1.2 | Compiled from submodule `third_party/pytorch_scatter` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_scatter.sh`) and included in the runtime image |
-| Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Toolchain, NCCL/MAGMA, PyTorch, metatomic stack, and torch_scatter verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs |
+| OpenEquivariance 0.7.0 | Patched in [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) (branch `v0.7.0-kepler`): CUDA 11 Driver API fallback (`CUmodule`), NVRTC 11.8 flag compatibility, multi-device/multi-architecture kernel caching, and installed LibTorch C ABI detection. Compiled from `third_party/openequivariance` and included in the runtime image |
+| Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Toolchain, NCCL/MAGMA, PyTorch, metatomic stack, torch_scatter, and OpenEquivariance verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs |
