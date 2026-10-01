@@ -8,7 +8,7 @@ Our machine is called *iapetus*. It has an Intel Core i7-5930K on an ASUS X99-E 
 **two Tesla K20c** and **one GeForce GTX 750 Ti**. If you own something similar, this image should work for you.
 
 ```bash
-docker pull ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 ```
 
 ---
@@ -90,10 +90,10 @@ Our reference machine:
 ## Quick start
 
 ```bash
-docker pull ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 
 docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
-  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch-iapetus:2.14.0 \
+  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus \
   python -c "import torch; print(torch.__version__, [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())], torch.cuda.has_magma)"
 ```
 
@@ -109,7 +109,7 @@ The test suites live in this repository. Clone it and mount it as `/workspace`:
 
 ```bash
 git clone https://github.com/kazeevn/pytorch-iapetus.git && cd pytorch-iapetus
-IMAGE=ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 for t in test_magma test_torch_scatter test_metatomic test_openequivariance; do
   docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
     "$IMAGE" python "tests/$t.py"
@@ -150,19 +150,21 @@ not self-contained: it needs the CUDA 11.8, NCCL, MAGMA, oneMKL and OpenMPI libr
 
 | Tag | Built from |
 | :--- | :--- |
-| `ghcr.io/kazeevn/pytorch-iapetus:2.14.0-r<N>` | a published release of `iapetus/pytorch`; never changes |
-| `ghcr.io/kazeevn/pytorch-iapetus:2.14.0`, `:latest` | the newest release for PyTorch 2.14.0 / overall |
+| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus-r<N>` | a published release of `iapetus/pytorch`; never changes |
+| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus`, `:latest` | the newest release for PyTorch 2.14.0 / overall |
 | `iapetus/builder:cuda11.8-py312` | `docker/builder.Dockerfile` (local only) |
 | `iapetus/pytorch:2.14.0-cuda11.8-py312` | `docker/runtime.Dockerfile` (local build tag) |
 
 ### Versions and releases
 
-Releases are versioned `<PyTorch version>-r<revision>`, e.g. `2.14.0-r1`. The revision goes up whenever the
-image changes without a new PyTorch version (new packages, patches, dependency updates, a rebuilt wheel) and
-restarts at `r1` for a new PyTorch version. Each release has a git tag `v2.14.0-r1` and a
+Tags follow the official `pytorch/pytorch` images (`2.14.0-cuda11.8-cudnn9-runtime` there), with `iapetus` as
+the variant: `2.14.0-cuda11.8-iapetus-r1`. There is no cuDNN, since cuDNN doesn't support Kepler. The revision
+`rN` goes up whenever the image changes without a new PyTorch version (new packages, patches, dependency
+updates, a rebuilt wheel) and restarts at `r1` for a new PyTorch version. Each release has the same git tag
+(`v2.14.0-cuda11.8-iapetus-r1`) and a
 [GitHub Release](https://github.com/kazeevn/pytorch-iapetus/releases) with the changes, the image digest,
-component versions and the PyTorch wheel. Pin `2.14.0-rN` for reproducible work; `2.14.0` follows the newest
-revision. Maintainers publish with `scripts/release.sh <revision>` (see the script header).
+component versions and the PyTorch wheel. Pin `…-iapetus-rN` for reproducible work; `2.14.0-cuda11.8-iapetus`
+follows the newest revision. Maintainers publish with `scripts/release.sh <revision>` (see the script header).
 
 ## Repository layout
 
@@ -176,7 +178,7 @@ pytorch-iapetus/
 │   └── sitecustomize.py      # forces TCPStore(use_libuv=False)
 ├── scripts/
 │   ├── build_images.sh       # docker build for builder / runtime
-│   ├── release.sh            # push the image to GHCR + GitHub Release (version <pytorch>-r<N>)
+│   ├── release.sh            # push the image to GHCR + GitHub Release (<pytorch>-cuda<cuda>-iapetus-r<N>)
 │   ├── build_pytorch.sh      # PyTorch wheel → dist/ (runs inside the builder image)
 │   ├── build_nccl.sh         # NCCL from third_party/nccl (used by builder.Dockerfile)
 │   ├── build_magma.sh        # MAGMA from the pinned ICL tarball (used by builder.Dockerfile)

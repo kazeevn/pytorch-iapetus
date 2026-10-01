@@ -2,9 +2,10 @@
 # Publish a release: push the runtime image to GHCR and create a GitHub Release with the torch wheel.
 #   scripts/release.sh <revision> [changes.md]
 #
-# Versions are <pytorch>-r<revision>, e.g. 2.14.0-r3; the revision restarts at 1 for a new PyTorch version.
-# The image is pushed as :<pytorch>-r<revision> (immutable), :<pytorch> and :latest; the commit is tagged
-# v<pytorch>-r<revision>. changes.md (optional) is put at the top of the release notes.
+# Versions mirror the official pytorch/pytorch tags: <pytorch>-cuda<cuda>-iapetus-r<revision>,
+# e.g. 2.14.0-cuda11.8-iapetus-r3; the revision restarts at 1 for a new PyTorch version.
+# The image is pushed as :<version> (immutable), :<pytorch>-cuda<cuda>-iapetus (newest revision) and :latest;
+# the commit is tagged v<version>. changes.md (optional) is put at the top of the release notes.
 #
 # Prerequisites: a clean, pushed checkout; the runtime image built from it (scripts/build_images.sh runtime);
 # `gh auth refresh -s write:packages` and `gh auth token | docker login ghcr.io -u <user> --password-stdin`.
@@ -15,7 +16,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 REVISION="${1:?usage: scripts/release.sh <revision> [changes.md]}"
 CHANGES="${2:-}"
 RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
-REPO="${REPO:-ghcr.io/kazeevn/pytorch-iapetus}"
+REPO="${REPO:-ghcr.io/kazeevn/pytorch}"
 
 [[ "$REVISION" =~ ^[1-9][0-9]*$ ]] || { echo "revision must be a positive integer" >&2; exit 1; }
 [[ -z "$CHANGES" || -f "$CHANGES" ]] || { echo "$CHANGES: no such file" >&2; exit 1; }
@@ -36,7 +37,9 @@ fi
 in_image() { docker run --rm --entrypoint /opt/venv312/bin/python "$RUNTIME_TAG" -c "$1"; }
 TORCH_FULL="$(in_image 'import torch; print(torch.__version__)')"
 TORCH="$(grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' <<<"$TORCH_FULL")"
-VERSION="$TORCH-r$REVISION"
+CUDA="$(in_image 'import torch; print(torch.version.cuda)')"
+SERIES="$TORCH-cuda$CUDA-iapetus"
+VERSION="$SERIES-r$REVISION"
 TAG="v$VERSION"
 
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "tag $TAG exists" >&2; exit 1; }
@@ -47,7 +50,7 @@ WHEEL="dist/torch-${TORCH_FULL}-cp312-cp312-linux_x86_64.whl"
 
 echo "Releasing $VERSION from $HEAD_SHA (image $RUNTIME_TAG, torch $TORCH_FULL)"
 
-for t in "$VERSION" "$TORCH" latest; do
+for t in "$VERSION" "$SERIES" latest; do
     docker tag "$RUNTIME_TAG" "$REPO:$t"
     docker push -q "$REPO:$t"
 done
@@ -79,7 +82,7 @@ trap 'rm -f "$NOTES"' EXIT
 docker pull $REPO:$VERSION
 \`\`\`
 
-Digest: \`${DIGEST#*@}\`. Also tagged \`$TORCH\` and \`latest\` at the time of release.
+Digest: \`${DIGEST#*@}\`. Also tagged \`$SERIES\` and \`latest\` at the time of release.
 Requirements (CPU with AVX2, Kepler \`sm_35\`/Maxwell \`sm_50\` GPU, NVIDIA driver 470) are in the
 [README](https://github.com/kazeevn/pytorch-iapetus/blob/$TAG/README.md#will-it-run-on-my-machine).
 
@@ -96,8 +99,8 @@ are reproducing that environment.
 EOF
 } >"$NOTES"
 
-git tag -a "$TAG" -m "pytorch-iapetus $VERSION"
+git tag -a "$TAG" -m "PyTorch $VERSION"
 git push -q origin "$TAG"
-gh release create "$TAG" "$WHEEL" --verify-tag --title "pytorch-iapetus $VERSION" \
+gh release create "$TAG" "$WHEEL" --verify-tag --title "PyTorch $VERSION" \
     --notes-file "$NOTES" --generate-notes
 echo "Released $TAG: $REPO@${DIGEST#*@}"

@@ -96,7 +96,7 @@ docker run --rm -it \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 ```
 * Container user: `developer` (UID 1000)
 * On the host, created files belong to `alice:alice`.
@@ -108,7 +108,7 @@ docker run --rm -it \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
   -v /home/bob/pytorch-research:/workspace \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 ```
 * Container user: `developer` (UID 1001)
 * On the host, created files belong to `bob:bob`.
@@ -128,7 +128,7 @@ docker run --rm -it \
   -e HOST_USER=$(whoami) \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
+  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
 ```
 
 ---
@@ -140,7 +140,7 @@ To run as `root` (for installing system packages inside a test container):
 ```bash
 docker run --rm -it \
   -e HOST_UID=0 \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0 \
+  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus \
   bash
 ```
 
