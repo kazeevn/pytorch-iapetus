@@ -31,12 +31,10 @@ RUN apt-get update && \
 # GCC 12 is the default gcc/g++/cc/c++; GCC 11 stays installed for nvcc.
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 120 \
         --slave /usr/bin/g++ g++ /usr/bin/g++-12 \
-        --slave /usr/bin/gcov gcov /usr/bin/gcov-12 \
-        --slave /usr/bin/cpp cpp /usr/bin/cpp-12 && \
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-12 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 \
         --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
-        --slave /usr/bin/gcov gcov /usr/bin/gcov-11 \
-        --slave /usr/bin/cpp cpp /usr/bin/cpp-11 && \
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-11 && \
     gcc --version | head -n1 | grep -q ' 12\.' && \
     c++ --version | head -n1 | grep -q ' 12\.'
 
