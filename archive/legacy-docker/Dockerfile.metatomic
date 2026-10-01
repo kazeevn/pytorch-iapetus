@@ -1,0 +1,30 @@
+FROM pytorch:2.14.0-cuda11.8-py312-universal-backup
+
+USER root
+
+# Install updated entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Configure environment variables
+ENV USE_LIBUV=0
+ENV CMAKE_PREFIX_PATH="/usr/local:/opt/venv312/lib/python3.12/site-packages/torch/share/cmake:/opt/venv312/lib/python3.12/site-packages/metatensor/lib/cmake:/opt/venv312/lib/python3.12/site-packages/metatensor_torch/torch-2.14/lib/cmake"
+
+# Append CMAKE_PREFIX_PATH to system-wide bash configuration
+RUN echo 'export CMAKE_PREFIX_PATH="/usr/local:/opt/venv312/lib/python3.12/site-packages/torch/share/cmake:/opt/venv312/lib/python3.12/site-packages/metatensor/lib/cmake:/opt/venv312/lib/python3.12/site-packages/metatensor_torch/torch-2.14/lib/cmake:${CMAKE_PREFIX_PATH:-}"' >> /etc/bash.bashrc
+
+# Copy metatomic sources and build script
+COPY metatomic-v0.1.18 /tmp/metatomic-v0.1.18
+COPY build_metatomic_torch.sh /tmp/build_metatomic_torch.sh
+
+# Build metatomic-torch C++ library and Python bindings
+RUN chmod +x /tmp/build_metatomic_torch.sh && \
+    /tmp/build_metatomic_torch.sh && \
+    rm -rf /tmp/metatomic-v0.1.18 /tmp/build_metatomic_torch.sh /tmp/metatomic_build
+
+# Ensure workspace directory exists and start as root for dynamic UID/GID entrypoint
+WORKDIR /workspace
+USER root
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]

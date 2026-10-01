@@ -1,0 +1,27 @@
+FROM pytorch-builder:cuda11.8-py312
+
+# Install the built PyTorch wheel
+COPY pytorch-v2.14.0/dist/torch-2.14.0-cp312-cp312-linux_x86_64.whl /tmp/
+RUN /opt/venv312/bin/pip install --force-reinstall --no-deps --no-cache-dir /tmp/torch-2.14.0-cp312-cp312-linux_x86_64.whl && \
+    rm /tmp/torch-2.14.0-cp312-cp312-linux_x86_64.whl
+
+# Configure groups and kna user
+RUN getent group render >/dev/null || groupadd -g 991 render 2>/dev/null || echo "render:x:991:root" >> /etc/group && \
+    getent group kvm >/dev/null || groupadd -g 992 kvm 2>/dev/null || echo "kvm:x:992:root" >> /etc/group && \
+    (getent group kna >/dev/null || groupadd -g 1000 kna) && \
+    (getent passwd kna >/dev/null || useradd -u 1000 -g 1000 -m -s /bin/bash kna) && \
+    usermod -aG video,render kna && \
+    echo "export PATH=\"/opt/venv312/bin:\$PATH\"" >> /etc/bash.bashrc && \
+    echo "export PATH=\"/opt/venv312/bin:\$PATH\"" >> /home/kna/.bashrc && \
+    echo "source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true" >> /etc/bash.bashrc && \
+    echo "source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true" >> /home/kna/.bashrc && \
+    mkdir -p /workspace /home/kna/.cache && \
+    chown -R kna:kna /home/kna /workspace && \
+    chmod 777 /tmp
+
+USER kna
+ENV HOME=/home/kna
+ENV PATH="/opt/venv312/bin:${PATH}"
+ENV USE_LIBUV=0
+WORKDIR /workspace
+CMD ["python"]

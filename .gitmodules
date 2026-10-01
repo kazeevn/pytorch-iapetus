@@ -1,0 +1,11 @@
+[submodule "third_party/pytorch"]
+	path = third_party/pytorch
+	url = https://github.com/kazeevn/pytorch_kepler.git
+	branch = v2.14.0-kepler
+[submodule "third_party/pytorch_scatter"]
+	path = third_party/pytorch_scatter
+	url = https://github.com/rusty1s/pytorch_scatter.git
+[submodule "third_party/nccl"]
+	path = third_party/nccl
+	url = https://github.com/kazeevn/nccl.git
+	branch = v2.23.4-kepler

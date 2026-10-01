@@ -1,0 +1,8 @@
+# Allowlist: only what the Dockerfiles COPY is sent to the daemon.
+*
+!docker/
+!scripts/
+!third_party/nccl/
+!dist/*.whl
+**/.git
+third_party/nccl/build

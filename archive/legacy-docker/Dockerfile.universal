@@ -1,0 +1,16 @@
+FROM pytorch:2.14.0-cuda11.8-py312
+
+USER root
+
+# Install entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Ensure container starts as root so entrypoint can configure users
+USER root
+WORKDIR /workspace
+
+ENV USE_LIBUV=0
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]

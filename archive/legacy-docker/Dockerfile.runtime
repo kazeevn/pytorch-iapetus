@@ -1,0 +1,8 @@
+FROM pytorch-builder:cuda11.8
+
+COPY pytorch-v2.8.0/dist/torch-2.8.0-cp310-cp310-linux_x86_64.whl /tmp/
+RUN pip3 install --no-cache-dir --no-deps /tmp/torch-2.8.0-cp310-cp310-linux_x86_64.whl && \
+    rm /tmp/torch-2.8.0-cp310-cp310-linux_x86_64.whl
+
+WORKDIR /workspace
+CMD ["python3"]

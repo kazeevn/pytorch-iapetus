@@ -1,0 +1,15 @@
+# Build products (wheels are distributed out of band, not via git)
+/dist/
+*.whl
+__pycache__/
+*.pyc
+
+# Large historical artifacts kept locally only (see archive/README.md)
+/archive/pytorch-v2.8.0/
+/archive/dist-*/
+/archive/prebuilt/
+/archive/sources/
+/archive/mace-repo/
+/archive/mace-experiments/model_cache/
+/archive/*.whl
+/archive/*.whl.bak

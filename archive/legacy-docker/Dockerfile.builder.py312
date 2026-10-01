@@ -1,0 +1,66 @@
+FROM pytorch-builder:cuda11.8
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Install Python 3.12 using uv
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
+RUN uv python install 3.12
+
+# Create Python 3.12 virtual environment with pip seeded
+RUN uv venv --seed /opt/venv312 --python 3.12
+
+# Install build prerequisites into Python 3.12 venv using uv pip
+RUN uv pip install --python /opt/venv312 \
+    numpy \
+    pyyaml \
+    setuptools \
+    wheel \
+    build \
+    scikit-build-core \
+    packaging \
+    six \
+    typing-extensions \
+    sympy \
+    jinja2 \
+    filelock \
+    networkx \
+    cmake \
+    ninja
+
+# Add Intel oneAPI repository
+RUN curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list
+
+# Install Intel MKL, oneDNN, OpenMPI, and BLAS/LAPACK development libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    intel-oneapi-mkl-devel \
+    intel-oneapi-dnnl-devel \
+    libopenblas-dev \
+    liblapack-dev \
+    libopenmpi-dev \
+    openmpi-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure dynamic linker for Intel oneAPI libraries
+RUN printf "/opt/intel/oneapi/mkl/latest/lib/intel64\n/opt/intel/oneapi/compiler/latest/lib/intel64\n/opt/intel/oneapi/compiler/latest/lib\n/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin\n/opt/intel/oneapi/dnnl/latest/lib\n/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8\n" > /etc/ld.so.conf.d/intel-oneapi.conf && ldconfig
+
+# Set Intel oneAPI environment variables
+ENV MKLROOT=/opt/intel/oneapi/mkl/latest
+ENV ONEAPI_ROOT=/opt/intel/oneapi
+
+# Upgrade NCCL to 2.23.4 (compiled for sm_35 and sm_50)
+COPY nccl-v2.23.4/include/ /usr/include/
+COPY nccl-v2.23.4/lib/ /usr/lib/x86_64-linux-gnu/
+RUN ldconfig
+
+# Install MAGMA 2.10.0 (compiled for sm_35 and sm_50 with Intel oneMKL)
+COPY magma-v2.10.0/ /opt/magma/
+RUN echo "/opt/magma/lib" > /etc/ld.so.conf.d/magma.conf && \
+    ln -sf /opt/magma /usr/local/magma && \
+    ldconfig
+ENV MAGMA_HOME=/opt/magma
+
+ENV PATH="/opt/venv312/bin:${PATH}"
+
+WORKDIR /workspace
