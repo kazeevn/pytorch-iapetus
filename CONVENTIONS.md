@@ -19,10 +19,14 @@ submodule or a pinned URL plus sha256.
 | `tests/` | Verification suites and their Docker runners |
 | `docs/` | Usage, multi-user setup, known issues |
 | `third_party/` | Git submodules: our forks and pinned upstream sources |
-| `dist/` | Built wheels (git-ignored; distributed out of band) |
+| `dist/` | Built wheels (git-ignored; not published, shipped inside the runtime image) |
 | `archive/` | Historical notes (tracked) and large legacy artifacts (git-ignored, local only) |
 
 Do not commit build products, wheels, tarballs or vendored source trees.
+
+The runtime image is published as `ghcr.io/kazeevn/pytorch-iapetus:<torch>-cuda11.8-py312` (plus `:latest`)
+with `scripts/build_images.sh push`. Local builds keep the `iapetus/*` tags. Publish only images built from
+a clean, pushed commit of this repository, so the image can be reproduced from its sources.
 
 ## (b) Third-party sources
 
@@ -107,3 +111,4 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | `torch_scatter` 2.1.2 | Compiled from submodule `third_party/pytorch_scatter` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_scatter.sh`) and included in the runtime image |
 | OpenEquivariance 0.7.0 | Patched in [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) (branch `v0.7.0-kepler`): CUDA 11 Driver API fallback (`CUmodule`), NVRTC 11.8 flag compatibility, multi-device/multi-architecture kernel caching, and installed LibTorch C ABI detection. Compiled from `third_party/openequivariance` and included in the runtime image |
 | Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Toolchain, NCCL/MAGMA, PyTorch, metatomic stack, torch_scatter, and OpenEquivariance verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs |
+| Published image (`ghcr.io/kazeevn/pytorch-iapetus`) | `iapetus/pytorch` of 2026-10-01 plus OCI labels from `docker/runtime.Dockerfile`. It contains the pre-conventions torch wheel listed above |

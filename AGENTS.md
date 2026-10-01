@@ -19,6 +19,7 @@ Practicalities:
   as the invoking user (`--user "$(id -u):$(id -g)"` or the runtime image's entrypoint). Root-owned files
   in this checkout break later work.
 - The host has 6 physical cores; keep build parallelism at about 4–6 jobs.
-- Tag new images under `iapetus/*`. Don't retag or remove `pytorch:2.14.0-cuda11.8-py312-universal`
+- Tag new images under `iapetus/*`. Don't retag or remove `iapetus/pytorch:2.14.0-cuda11.8-py312`
   without asking: other users run it.
+- The public copy is `ghcr.io/kazeevn/pytorch-iapetus` (`scripts/build_images.sh push`); push only when asked.
 - Update the compliance table in `CONVENTIONS.md` when you fix or introduce a deviation.

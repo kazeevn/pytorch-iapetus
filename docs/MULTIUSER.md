@@ -2,17 +2,17 @@
 
 ## 1. Problem Statement
 
-When sharing Docker images across multiple local users (such as `kna` with UID 1000 and `maevskiy` with UID 1001) on a shared GPU workstation, common problems arise:
+When sharing Docker images across multiple local users (such as `alice` with UID 1000 and `bob` with UID 1001) on a shared GPU workstation, common problems arise:
 
-1. **Hardcoded User in Image (`USER kna`)**:
-   - If user `maevskiy` runs the image, they run as user `kna` inside the container.
-   - Any files written to a mounted directory are owned by UID 1000 (`kna`), causing permission conflicts when `maevskiy` accesses them on the host.
-   - If `maevskiy` mounts their private directory (`/home/maevskiy/...`), user `kna` gets `Permission Denied` on the host files.
+1. **Hardcoded User in Image (`USER alice`)**:
+   - If user `bob` runs the image, they run as user `alice` inside the container.
+   - Any files written to a mounted directory are owned by UID 1000 (`alice`), causing permission conflicts when `bob` accesses them on the host.
+   - If `bob` mounts their private directory (`/home/bob/...`), user `alice` gets `Permission Denied` on the host files.
 2. **Defaulting to `root` (`USER root`)**:
    - Files created inside the container are owned by `root:root`, requiring `sudo` on the host to edit or remove them.
 3. **Simple `--user $(id -u):$(id -g)` without User Setup**:
    - Arbitrary UIDs have no entry in `/etc/passwd` (`whoami` fails with "cannot find name for user ID").
-   - `$HOME` defaults to `/` or `/home/kna`, causing permission denied errors on cache directories (`~/.cache`, PyTorch hub, pip).
+   - `$HOME` defaults to `/` or `/home/alice`, causing permission denied errors on cache directories (`~/.cache`, PyTorch hub, pip).
    - The user is not in the `video` and `render` groups, which can cause CUDA device permission issues.
 
 ---
@@ -139,29 +139,29 @@ scripts/build_images.sh runtime   # tags iapetus/pytorch:2.14.0-cuda11.8-py312
 
 When a user bind-mounts their directory to `/workspace`, the entrypoint reads the directory ownership and automatically runs as that user:
 
-#### For User `kna` (UID 1000):
+#### For User `alice` (UID 1000):
 ```bash
 docker run --rm -it \
   --runtime=nvidia \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  iapetus/pytorch:2.14.0-cuda11.8-py312
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
 ```
-* Container user: `kna` (UID 1000)
-* All created files belong to `kna:kna`.
+* Container user: `alice` (UID 1000)
+* All created files belong to `alice:alice`.
 
-#### For User `maevskiy` (UID 1001):
+#### For User `bob` (UID 1001):
 ```bash
 docker run --rm -it \
   --runtime=nvidia \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
-  -v /home/maevskiy/pytorch-research:/workspace \
-  iapetus/pytorch:2.14.0-cuda11.8-py312
+  -v /home/bob/pytorch-research:/workspace \
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
 ```
-* Container user: `maevskiy` (UID 1001)
-* All created files belong to `maevskiy:maevskiy`.
+* Container user: `bob` (UID 1001)
+* All created files belong to `bob:bob`.
 
 ---
 
@@ -178,7 +178,7 @@ docker run --rm -it \
   -e HOST_USER=$(whoami) \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  iapetus/pytorch:2.14.0-cuda11.8-py312
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
 ```
 
 ---
@@ -190,7 +190,7 @@ To run as `root` (for installing system packages inside a test container):
 ```bash
 docker run --rm -it \
   -e HOST_UID=0 \
-  iapetus/pytorch:2.14.0-cuda11.8-py312 \
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312 \
   bash
 ```
 

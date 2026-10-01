@@ -34,7 +34,7 @@ MAGMA 2.10.0 was successfully compiled from source with Intel oneAPI MKL (oneMKL
 
 ```bash
 docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
-  -v "$(pwd):/workspace" iapetus/pytorch:2.14.0-cuda11.8-py312 python tests/test_magma.py
+  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312 python tests/test_magma.py
 ```
 Output:
 - `MAGMA Available : True`
