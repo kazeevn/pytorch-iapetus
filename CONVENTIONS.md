@@ -42,7 +42,7 @@ commit, or a release URL plus sha256 checked in the build script.
 | :--- | :--- | :--- | :--- |
 | PyTorch 2.14.0 | [kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.0-kepler) → `third_party/pytorch` | branch `v2.14.0-kepler` | yes |
 | NCCL 2.23.4 | [kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler) → `third_party/nccl` | branch `v2.23.4-kepler` | yes |
-| torch_scatter | upstream `rusty1s/pytorch_scatter` → `third_party/pytorch_scatter` | commit `f514c10` | not yet |
+| torch_scatter 2.1.2 | upstream `rusty1s/pytorch_scatter` → `third_party/pytorch_scatter` (`scripts/build_torch_scatter.sh`) | commit `f514c10` | no (unpatched) |
 | MAGMA 2.10.0 | ICL release tarball (`scripts/build_magma.sh`) | sha256 | no |
 | metatomic-torch 0.1.18 | PyPI sdist (`scripts/build_metatomic_torch.sh`) | sha256 | no |
 | metatensor-torch 0.10.6 | PyPI sdist (`scripts/build_metatomic_torch.sh`) | version | no |
@@ -101,6 +101,7 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | Item | Status |
 | :--- | :--- |
 | `dist/torch-2.14.0.post2` wheel | Built **before** these conventions (GCC 11 host, old builder). Rebuild with `scripts/build_pytorch.sh` |
-| `torch.utils.cpp_extension` | Still forces `-std=c++20` for nvcc and takes `-ccbin` from `$CC`. Needs a `pytorch_kepler` patch (C++17 + `CUDAHOSTCXX`) before CUDA extensions such as torch_scatter can build |
-| `torch/csrc/autograd/edge.h` | Uses C++20 `intrusive_ptr != nullptr` rewriting, the only blocker for `torch/extension.h` in C++17 `.cu` files. Needs a `pytorch_kepler` patch |
-| Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Verified without GPUs: toolchain, NCCL/MAGMA built for `sm_35`+`sm_50` only and linked against oneMKL, torch backends, metatomic suite (6/6 non-GPU stages), multi-user entrypoint, `pip freeze` matching the legacy image. GPU suites (`tests/test_magma.py`, `tests/run_*_tests.sh`, metatomic CUDA stage) still need a run on idle GPUs |
+| `torch.utils.cpp_extension` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): defaults nvcc to `-std=c++17` on CUDA < 12 and uses `$CUDAHOSTCXX` for `-ccbin` |
+| `torch/csrc/autograd/edge.h` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): uses `static_cast<bool>(function)` and adds `operator!=`/`==` with `nullptr` in `intrusive_ptr.h` for C++17 compatibility |
+| `torch_scatter` 2.1.2 | Compiled from submodule `third_party/pytorch_scatter` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_scatter.sh`) and included in the runtime image |
+| Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Toolchain, NCCL/MAGMA, PyTorch, metatomic stack, and torch_scatter verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs |

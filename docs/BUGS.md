@@ -101,11 +101,17 @@ The builder image compiles it with [`scripts/build_nccl.sh`](../scripts/build_nc
 
 ---
 
-## 4. [OPEN] CUDA 11.8 nvcc cannot use GCC 12 as host compiler
+## 4. [RESOLVED] CUDA 11.8 nvcc host compiler and C++ standard in `torch.utils.cpp_extension`
+
+### Status: RESOLVED (patched `kazeevn/pytorch_kepler`)
 
 nvcc 11.8's front end rejects GCC 12 system headers (`bits/random.h`: `__extension__ using`;
 `avx512fp16intrin.h`: `_Float16`), even with `-allow-unsupported-compiler`. The builder therefore uses
 GCC 12 for host code and GCC 11 for nvcc (`CUDAHOSTCXX`). `NVCC_CCBIN` is not honoured by CUDA 11.8.
 Plain `nvcc` invocations without `-ccbin` use `g++` (GCC 12) and fail; pass `-ccbin "$CUDAHOSTCXX"`.
-`torch.utils.cpp_extension` still needs a `pytorch_kepler` patch: see the compliance table in
-[`CONVENTIONS.md`](../CONVENTIONS.md).
+
+In `kazeevn/pytorch_kepler` (commit `6fb679f`):
+1. `torch.utils.cpp_extension` defaults nvcc CUDA flags to `-std=c++17` on CUDA < 12.0 (CUDA 11.8 nvcc rejects `-std=c++20`).
+2. `torch.utils.cpp_extension` automatically passes `-ccbin "$CUDAHOSTCXX"` if `CUDAHOSTCXX` is set.
+3. `torch/csrc/autograd/edge.h` and `c10/util/intrusive_ptr.h` provide C++17 nullptr comparison compatibility for `intrusive_ptr`.
+4. CUDA extensions including `torch_scatter` compile and run cleanly for both `sm_35` and `sm_50`.

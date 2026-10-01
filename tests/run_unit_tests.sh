@@ -6,12 +6,14 @@ IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
 
 echo "=== Running Official PyTorch Unit Tests ($IMAGE) ==="
 
-docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all \
+docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEVICES:-all}" \
   --ipc=host -e HOST_UID=0 \
   -v "$REPO/third_party/pytorch/test:/workspace/test" \
+  -v "$REPO/tests:/workspace/tests" \
   "$IMAGE" \
   bash -c '
 set -e
+/opt/venv312/bin/python /workspace/tests/test_torch_scatter.py
 /opt/venv312/bin/pip install -q pytest hypothesis expecttest optree psutil
 cd /workspace
 

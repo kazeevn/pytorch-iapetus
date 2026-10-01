@@ -16,6 +16,10 @@ RUN uv pip install --python /opt/venv312 --no-deps /tmp/wheels/*.whl && rm -rf /
 COPY docker/requirements.txt /tmp/requirements.txt
 RUN uv pip install --python /opt/venv312 --no-deps -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
+COPY third_party/pytorch_scatter /tmp/pytorch_scatter
+COPY scripts/build_torch_scatter.sh /tmp/build_torch_scatter.sh
+RUN /tmp/build_torch_scatter.sh /tmp/pytorch_scatter && rm -rf /tmp/pytorch_scatter /tmp/build_torch_scatter.sh
+
 COPY scripts/build_metatomic_torch.sh /tmp/build_metatomic_torch.sh
 RUN /tmp/build_metatomic_torch.sh && rm /tmp/build_metatomic_torch.sh
 

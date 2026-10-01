@@ -3,6 +3,8 @@
 !docker/
 !scripts/
 !third_party/nccl/
+!third_party/pytorch_scatter/
 !dist/*.whl
 **/.git
 third_party/nccl/build
+third_party/pytorch_scatter/build

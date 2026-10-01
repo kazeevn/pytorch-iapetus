@@ -20,8 +20,8 @@ C++17 device), and the optimization targets (`-march=native`, `sm_35` + `sm_50` 
 - **Distributed:** NCCL 2.23.4 ([kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler),
   memory-pool fallback for Kepler/Maxwell), Gloo, OpenMPI 4.1.2.
 - **Atomistic ML:** metatensor-torch 0.10.6 and metatomic-torch 0.1.18 (C++ library + Python), compiled
-  against this PyTorch. ASE, vesin, warp-lang, orb-models, pymatgen and others are pinned in
-  [`docker/requirements.txt`](docker/requirements.txt).
+  against this PyTorch. torch_scatter 2.1.2 compiled from source for Kepler + Maxwell. ASE, vesin,
+  warp-lang, orb-models, pymatgen and others are pinned in [`docker/requirements.txt`](docker/requirements.txt).
 - **Multi-user entrypoint:** the container runs as the owner of the mounted `/workspace`
   (see [`docs/MULTIUSER.md`](docs/MULTIUSER.md)).
 
@@ -49,6 +49,7 @@ pytorch-iapetus/
 │   ├── build_pytorch.sh      # PyTorch wheel → dist/ (runs inside the builder image)
 │   ├── build_nccl.sh         # NCCL from third_party/nccl (used by builder.Dockerfile)
 │   ├── build_magma.sh        # MAGMA from the pinned ICL tarball (used by builder.Dockerfile)
+│   ├── build_torch_scatter.sh# torch_scatter from third_party/pytorch_scatter
 │   ├── build_metatomic_torch.sh
 │   └── build_warp_cpu.sh     # optional CPU-only warp rebuild for driver 470
 ├── tests/                    # test_magma / test_metatomic / distributed / unit-test runners
