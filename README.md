@@ -111,7 +111,6 @@ tests/run_distributed_tests.sh
 | :--- | :--- |
 | `iapetus/builder:cuda11.8-py312` | `docker/builder.Dockerfile` |
 | `iapetus/pytorch:2.14.0-cuda11.8-py312` | `docker/runtime.Dockerfile` |
-| `pytorch:2.14.0-cuda11.8-py312-universal` | Legacy hand-assembled image (pre-conventions); recipes in `archive/legacy-docker/` |
 
 ## Further documentation
 

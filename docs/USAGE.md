@@ -10,7 +10,6 @@ This guide documents how to use the custom-compiled **PyTorch 2.14** wheel and i
   `dist/torch-2.14.0.post2-cp312-cp312-linux_x86_64.whl` (271 MB, git-ignored; built by `scripts/build_pytorch.sh`)
 * **Pre-built Docker Images:**
   * `iapetus/pytorch:2.14.0-cuda11.8-py312` *(built from `docker/runtime.Dockerfile`; auto-detects host user UID/GID & GPU permissions)*
-  * `pytorch:2.14.0-cuda11.8-py312-universal` *(legacy hand-assembled image, same entrypoint)*
 * **Python Runtime:** Python 3.12 (managed via `uv` in `/opt/venv312`)
 * **CUDA Version:** CUDA 11.8 (Compatible with NVIDIA driver `470.256.02`)
 * **Target GPU Architectures:** Dual `sm_35` (Tesla K20c) + `sm_50` (GeForce GTX 750 Ti)
