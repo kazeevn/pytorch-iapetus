@@ -1,6 +1,6 @@
 # Builder image: CUDA 11.8 toolchain for Kepler (sm_35) + Maxwell (sm_50) on driver 470.
 #
-# Follows CONVENTIONS.md:
+# Follows docs/CONVENTIONS.md:
 #   (c) latest Ubuntu 22.04 packages (dist-upgrade)
 #   (d) GCC 12 for host code (C++20 allowed); nvcc uses GCC 11 (C++17 max), because
 #       CUDA 11.8's front end cannot parse GCC 12's libstdc++ / x86 intrinsics headers

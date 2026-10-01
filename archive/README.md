@@ -1,6 +1,7 @@
 # Historical Artifacts Archive
 
-Superseded builds, logs and notes from the bring-up of PyTorch on Kepler (`sm_35`) and Maxwell (`sm_50`).
+Superseded builds and experiments from the bring-up of PyTorch on Kepler (`sm_35`) and Maxwell (`sm_50`).
+Historical *documents* live in [`docs/archive/`](../docs/archive/).
 Only small text files are tracked in git; large items (marked *local*) are git-ignored and exist only on
 the build machine.
 
@@ -8,8 +9,6 @@ the build machine.
 | :--- | :--- | :--- |
 | `legacy-docker/` | Hand-assembled Dockerfile chain for 2.8 and 2.14 (`builder` → `builder.py312` → `runtime.py312` → `universal` → `metatomic`) | `docker/builder.Dockerfile`, `docker/runtime.Dockerfile` |
 | `build_pytorch.sh` | Build script for PyTorch 2.8 | `scripts/build_pytorch.sh` |
-| `BUGS.md` | Bugs encountered and resolved during the 2.14 bring-up | `docs/BUGS.md`, `third_party/pytorch` patches |
-| `CUDA_PYTORCH_COMPATIBILITY.md` | CUDA / driver / PyTorch compatibility research | `README.md`, `CONVENTIONS.md` |
 | `dockerhub_pytorch_tags.json` | Scrape of official PyTorch Docker Hub tags | reference data |
 | `mace-experiments/` | Early MACE benchmarks (`model_cache/` is *local*) | — |
 | `prebuilt/` *(local)* | Prebuilt NCCL 2.23.4 and MAGMA 2.10.0 binaries copied into the legacy builder | built from source in `docker/builder.Dockerfile` |

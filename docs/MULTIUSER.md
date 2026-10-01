@@ -51,76 +51,26 @@ The cleanest solution is the **Dynamic Entrypoint Pattern**:
 
 ### 3.1. `entrypoint.sh`
 
-The entrypoint lives in `docker/entrypoint.sh`:
+[`docker/entrypoint.sh`](../docker/entrypoint.sh) runs as root at container start and:
 
-```bash
-#!/bin/bash
-set -e
-
-# 1. Determine Target UID and GID:
-#    Priority 1: Explicit environment variables HOST_UID / HOST_GID if supplied.
-#    Priority 2: Auto-detect owner of /workspace if mounted from host.
-#    Priority 3: Fallback to UID/GID 1000.
-TARGET_UID="${HOST_UID:-$(stat -c '%u' /workspace 2>/dev/null || echo 1000)}"
-TARGET_GID="${HOST_GID:-$(stat -c '%g' /workspace 2>/dev/null || echo 1000)}"
-TARGET_USER="${HOST_USER:-developer}"
-
-# If root (UID 0) was explicitly requested, bypass privilege drop
-if [ "$TARGET_UID" -eq 0 ]; then
-    exec "$@"
-fi
-
-# 2. Dynamically create group if missing
-if ! getent group "$TARGET_GID" >/dev/null 2>&1; then
-    groupadd -g "$TARGET_GID" "$TARGET_USER" 2>/dev/null || true
-fi
-
-TARGET_GROUP=$(getent group "$TARGET_GID" | cut -d: -f1)
-
-# 3. Dynamically create user if missing
-if ! id -u "$TARGET_UID" >/dev/null 2>&1; then
-    useradd -u "$TARGET_UID" -g "$TARGET_GID" -m -s /bin/bash "$TARGET_USER" 2>/dev/null || true
-    TARGET_HOME="/home/$TARGET_USER"
-else
-    TARGET_USER=$(id -un "$TARGET_UID")
-    TARGET_HOME=$(getent passwd "$TARGET_UID" | cut -d: -f6)
-fi
-
-# 4. Add user to hardware groups needed for NVIDIA GPU access
-usermod -aG video,render "$TARGET_USER" 2>/dev/null || true
-
-# 5. Ensure Python venv is in PATH and user's .bashrc
-if [ -d "$TARGET_HOME" ]; then
-    if ! grep -q "/opt/venv312/bin" "$TARGET_HOME/.bashrc" 2>/dev/null; then
-        echo 'export PATH="/opt/venv312/bin:$PATH"' >> "$TARGET_HOME/.bashrc"
-    fi
-fi
-
-export HOME="$TARGET_HOME"
-export USER="$TARGET_USER"
-export PATH="/opt/venv312/bin:$PATH"
-
-# 6. Drop privileges and execute command
-exec setpriv --reuid="$TARGET_UID" --regid="$TARGET_GID" --init-groups "$@"
-```
+1. Picks the target UID/GID: `HOST_UID`/`HOST_GID` if set, otherwise the owner of `/workspace`, otherwise 1000.
+   If UID 0 is requested, it runs the command as root without further setup.
+2. Creates the group and user (`HOST_USER`, or a generated name) if they don't exist, with a home directory
+   under `/home`.
+3. Adds the user to the `video` and `render` groups for GPU device access.
+4. Writes `PATH` (`/opt/venv312/bin`), the oneAPI environment, `USE_LIBUV=0` and `CMAKE_PREFIX_PATH` into the
+   user's `.bashrc` and exports them for the command.
+5. Drops privileges with `setpriv --reuid --regid --init-groups` and `exec`s the command.
 
 ### 3.2. Runtime image (`docker/runtime.Dockerfile`)
 
-The entrypoint is installed by `docker/runtime.Dockerfile`. The original standalone wrapper looked like this (kept for reference; see `archive/legacy-docker/Dockerfile.universal`):
+The runtime image installs the entrypoint and starts as root so that the entrypoint can create the user:
 
 ```dockerfile
-FROM pytorch:2.14.0-cuda11.8-py312
-
-USER root
-
-# Install entrypoint script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Ensure container starts as root so entrypoint can configure users
-USER root
 WORKDIR /workspace
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]
 ```
@@ -137,7 +87,7 @@ scripts/build_images.sh runtime   # tags iapetus/pytorch:2.14.0-cuda11.8-py312
 
 ### Zero-Config Auto-Detection (Recommended)
 
-When a user bind-mounts their directory to `/workspace`, the entrypoint reads the directory ownership and automatically runs as that user:
+When a user bind-mounts their directory to `/workspace`, the entrypoint reads the directory's owner UID/GID and runs as that UID/GID. Inside the container the account is named `developer` unless `HOST_USER` is set (see below); on the host, files belong to the real user because the UID matches:
 
 #### For User `alice` (UID 1000):
 ```bash
@@ -146,10 +96,10 @@ docker run --rm -it \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
 ```
-* Container user: `alice` (UID 1000)
-* All created files belong to `alice:alice`.
+* Container user: `developer` (UID 1000)
+* On the host, created files belong to `alice:alice`.
 
 #### For User `bob` (UID 1001):
 ```bash
@@ -158,10 +108,10 @@ docker run --rm -it \
   -e NVIDIA_VISIBLE_DEVICES=all \
   --ipc=host \
   -v /home/bob/pytorch-research:/workspace \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
 ```
-* Container user: `bob` (UID 1001)
-* All created files belong to `bob:bob`.
+* Container user: `developer` (UID 1001)
+* On the host, created files belong to `bob:bob`.
 
 ---
 
@@ -178,7 +128,7 @@ docker run --rm -it \
   -e HOST_USER=$(whoami) \
   --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0
 ```
 
 ---
@@ -190,7 +140,7 @@ To run as `root` (for installing system packages inside a test container):
 ```bash
 docker run --rm -it \
   -e HOST_UID=0 \
-  ghcr.io/kazeevn/pytorch-iapetus:2.14.0-cuda11.8-py312 \
+  ghcr.io/kazeevn/pytorch-iapetus:2.14.0 \
   bash
 ```
 
@@ -200,5 +150,5 @@ docker run --rm -it \
 
 * **No Extra Dependencies**: Uses `setpriv`, which is built into standard Linux (`util-linux`), avoiding external binaries like `gosu` or `su-exec`.
 * **CUDA Hardware Permissions**: Automatically adds the detected user to `video` and `render` groups so `/dev/nvidia*` and `/dev/dri/*` devices are accessible.
-* **Persistent Home Caches**: Each user gets their own `/home/<username>` inside the container with proper ownership, preventing `Permission denied` on `~/.cache` and PyTorch model downloads.
+* **Per-User Home**: Each user gets their own `/home/<username>` inside the container with proper ownership, preventing `Permission denied` on `~/.cache` and PyTorch model downloads.
 * **Host Portability**: Works for any new user added to this machine without rebuilding the Docker image.

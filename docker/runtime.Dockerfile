@@ -10,7 +10,8 @@ ARG TORCH_WHEEL=dist/torch-2.14.0.post2-cp312-cp312-linux_x86_64.whl
 
 LABEL org.opencontainers.image.source="https://github.com/kazeevn/pytorch-iapetus" \
       org.opencontainers.image.description="PyTorch 2.14 + CUDA 11.8 for Kepler sm_35 / Maxwell sm_50 GPUs on NVIDIA driver 470; built with -march=native for Haswell (AVX2)" \
-      org.opencontainers.image.title="pytorch-iapetus"
+      org.opencontainers.image.title="pytorch-iapetus" \
+      org.opencontainers.image.licenses="Apache-2.0"
 
 USER root
 
@@ -51,3 +52,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]
+
+# Last, so a new commit does not invalidate the cache of the layers above.
+ARG GIT_REVISION=unknown
+LABEL org.opencontainers.image.revision="${GIT_REVISION}"

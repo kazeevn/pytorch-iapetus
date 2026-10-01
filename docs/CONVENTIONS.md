@@ -17,16 +17,26 @@ submodule or a pinned URL plus sha256.
 | `docker/` | Dockerfiles (`builder`, `runtime`), entrypoint, pinned runtime `requirements.txt` |
 | `scripts/` | Build scripts (`build_images.sh`, `build_pytorch.sh`, `build_nccl.sh`, `build_magma.sh`, ...) |
 | `tests/` | Verification suites and their Docker runners |
-| `docs/` | Usage, multi-user setup, known issues |
+| `docs/` | Documentation of the current code: conventions, usage, multi-user setup |
+| `docs/archive/` | Historical documents: bring-up notes, resolved bugs, research |
 | `third_party/` | Git submodules: our forks and pinned upstream sources |
-| `dist/` | Built wheels (git-ignored; not published, shipped inside the runtime image) |
-| `archive/` | Historical notes (tracked) and large legacy artifacts (git-ignored, local only) |
+| `dist/` | Built wheels (git-ignored; published as GitHub Release assets) |
+| `archive/` | Legacy Dockerfiles and experiment scripts (tracked) and large artifacts (git-ignored, local only) |
 
 Do not commit build products, wheels, tarballs or vendored source trees.
 
-The runtime image is published as `ghcr.io/kazeevn/pytorch-iapetus:<torch>-cuda11.8-py312` (plus `:latest`)
-with `scripts/build_images.sh push`. Local builds keep the `iapetus/*` tags. Publish only images built from
-a clean, pushed commit of this repository, so the image can be reproduced from its sources.
+**Documentation.** `docs/*.md` (and `README.md`) describe the code as it is now. A change that makes a document
+wrong updates it in the same commit. Anything that only describes the past (how a bug was found, superseded
+setups, research that led to a decision) moves to `docs/archive/`. Archived documents are not kept in sync with
+the code, and their links and paths may be stale.
+
+**Releases.** Versions are `<PyTorch version>-r<revision>` (`2.14.0-r1`, `2.14.0-r2`, ...). Bump the revision
+for any change to the published image; restart at `r1` with a new PyTorch version. `scripts/release.sh <revision>`
+pushes the runtime image to `ghcr.io/kazeevn/pytorch-iapetus` as `:<version>` (immutable), `:<PyTorch version>`
+and `:latest`, tags the commit `v<version>`, and creates a GitHub Release with the image digest, component
+versions and the torch wheel. Release only images built by `scripts/build_images.sh runtime` from a clean,
+pushed commit (the image's `org.opencontainers.image.revision` label must match `HEAD`), so every release can be
+reproduced from its tag. Local builds keep the `iapetus/*` tags.
 
 ## (b) Third-party sources
 
@@ -111,4 +121,4 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | `torch_scatter` 2.1.2 | Compiled from submodule `third_party/pytorch_scatter` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_scatter.sh`) and included in the runtime image |
 | OpenEquivariance 0.7.0 | Patched in [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) (branch `v0.7.0-kepler`): CUDA 11 Driver API fallback (`CUmodule`), NVRTC 11.8 flag compatibility, multi-device/multi-architecture kernel caching, and installed LibTorch C ABI detection. Compiled from `third_party/openequivariance` and included in the runtime image |
 | Images (`iapetus/builder`, `iapetus/pytorch`) | Built from this repository on 2026-10-01. Toolchain, NCCL/MAGMA, PyTorch, metatomic stack, torch_scatter, and OpenEquivariance verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs |
-| Published image (`ghcr.io/kazeevn/pytorch-iapetus`) | `iapetus/pytorch` of 2026-10-01 plus OCI labels from `docker/runtime.Dockerfile`. It contains the pre-conventions torch wheel listed above |
+| Release `2.14.0-r1` (`ghcr.io/kazeevn/pytorch-iapetus`) | `iapetus/pytorch` of 2026-10-01 plus source/description/title labels, released with `FORCE=1`: it predates the `revision` and `licenses` labels, so it is not tied to a commit by label. It contains the pre-conventions torch wheel listed above |

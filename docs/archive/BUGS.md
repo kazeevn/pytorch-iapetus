@@ -12,13 +12,13 @@ MAGMA 2.10.0 was successfully compiled from source with Intel oneAPI MKL (oneMKL
 
 - `torch.cuda.has_magma` evaluates to `True`.
 - General non-symmetric eigendecomposition `torch.linalg.eig` works directly on CUDA tensors across both single and double precision (`float32`, `float64`) and batched dimensions `(B, N, N)`.
-- Verification script [`tests/test_magma.py`](../tests/test_magma.py) validates GPU eigendecomposition, matrix inversion, linear solve, Cholesky, QR, and SVD against CPU Intel oneMKL with machine precision accuracy ($\le 10^{-14}$ on `float64`).
+- Verification script [`tests/test_magma.py`](../../tests/test_magma.py) validates GPU eigendecomposition, matrix inversion, linear solve, Cholesky, QR, and SVD against CPU Intel oneMKL with machine precision accuracy ($\le 10^{-14}$ on `float64`).
 
 ---
 
 ### Implementation Details
 
-1. **Custom Build of MAGMA 2.10.0** (now reproduced by [`scripts/build_magma.sh`](../scripts/build_magma.sh) in the builder image):
+1. **Custom Build of MAGMA 2.10.0** (now reproduced by [`scripts/build_magma.sh`](../../scripts/build_magma.sh) in the builder image):
    - Source: MAGMA 2.10.0 (released February 2026).
    - Build system: CMake configured with `-DGPU_TARGET="sm_35 sm_50" -DMAGMA_WITH_MKL=ON -DBUILD_SHARED_LIBS=ON`.
    - Linked against Intel oneMKL 2026.1 (`libmkl_intel_lp64.so`, `libmkl_gnu_thread.so`, `libmkl_core.so`) and OpenMP threading (`libiomp5.so`).
@@ -60,9 +60,9 @@ torch.distributed.DistStoreError: use_libuv was requested but PyTorch was built 
 
 This issue is resolved in the runtime image via a multi-layered fix:
 1. **Container Environment**:
-   `ENV USE_LIBUV=0` is permanently set in [`docker/runtime.Dockerfile`](../docker/runtime.Dockerfile), `/etc/environment`, `/etc/bash.bashrc`, and [`docker/entrypoint.sh`](../docker/entrypoint.sh). PyTorch's Python modules ([`rendezvous.py`](torch/distributed/rendezvous.py) and [`elastic`](torch/distributed/elastic/utils/distributed.py)) explicitly read `os.environ.get("USE_LIBUV")` and set `use_libuv=False` automatically.
+   `ENV USE_LIBUV=0` is permanently set in [`docker/runtime.Dockerfile`](../../docker/runtime.Dockerfile), `/etc/environment`, `/etc/bash.bashrc`, and [`docker/entrypoint.sh`](../../docker/entrypoint.sh). PyTorch's Python modules ([`rendezvous.py`](torch/distributed/rendezvous.py) and [`elastic`](torch/distributed/elastic/utils/distributed.py)) explicitly read `os.environ.get("USE_LIBUV")` and set `use_libuv=False` automatically.
 2. **Persistent Python Hook**:
-   [`docker/sitecustomize.py`](../docker/sitecustomize.py) (installed as `/opt/venv312/lib/python3.12/site-packages/sitecustomize.py`) was updated to unconditionally ensure `kwargs["use_libuv"] = False`:
+   [`docker/sitecustomize.py`](../../docker/sitecustomize.py) (installed as `/opt/venv312/lib/python3.12/site-packages/sitecustomize.py`) was updated to unconditionally ensure `kwargs["use_libuv"] = False`:
    ```python
    try:
        import torch
@@ -97,7 +97,7 @@ The fix lives in [kazeevn/nccl@v2.23.4-kepler](https://github.com/kazeevn/nccl/t
   which is valid for both allocation paths;
 - skip `cudaMemPoolDestroy` when no pool exists.
 
-The builder image compiles it with [`scripts/build_nccl.sh`](../scripts/build_nccl.sh) and installs it to `/opt/nccl`.
+The builder image compiles it with [`scripts/build_nccl.sh`](../../scripts/build_nccl.sh) and installs it to `/opt/nccl`.
 
 ---
 

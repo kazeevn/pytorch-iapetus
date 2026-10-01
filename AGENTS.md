@@ -1,7 +1,7 @@
 # Agent instructions
 
 This repository builds PyTorch 2.14 and its ecosystem from source for Kepler `sm_35` + Maxwell `sm_50`
-GPUs on driver 470 (CUDA 11.8). **Follow [`CONVENTIONS.md`](CONVENTIONS.md).** In short:
+GPUs on driver 470 (CUDA 11.8). **Follow [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).** In short:
 
 - **Sources:** if you patch a library, fork it to `github.com/kazeevn`, commit on a `<upstream-tag>-kepler`
   branch, and add it as a submodule in `third_party/`. Never vendor source trees, tarballs or wheels into this repo.
@@ -21,5 +21,7 @@ Practicalities:
 - The host has 6 physical cores; keep build parallelism at about 4–6 jobs.
 - Tag new images under `iapetus/*`. Don't retag or remove `iapetus/pytorch:2.14.0-cuda11.8-py312`
   without asking: other users run it.
-- The public copy is `ghcr.io/kazeevn/pytorch-iapetus` (`scripts/build_images.sh push`); push only when asked.
-- Update the compliance table in `CONVENTIONS.md` when you fix or introduce a deviation.
+- Releases are `<pytorch>-r<N>` (see `docs/CONVENTIONS.md`), published with `scripts/release.sh`; release only when asked.
+- Update the compliance table in `docs/CONVENTIONS.md` when you fix or introduce a deviation.
+- `docs/*.md` describe the current code; keep them in sync when you change it. Historical notes go to
+  `docs/archive/`.
