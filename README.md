@@ -7,9 +7,71 @@ GPUs, using CUDA 11.8 on the last driver that still supports Kepler (470).
 Our machine is called *iapetus*. It has an Intel Core i7-5930K on an ASUS X99-E WS (BIOS dated November 2014),
 **two Tesla K20c** and **one GeForce GTX 750 Ti**. If you own something similar, this image should work for you.
 
+## Quick start
+
+**1. NVIDIA driver 470.** It is the last driver branch that supports Kepler. Check what you have:
+
+```bash
+nvidia-smi    # the header should say "Driver Version: 470.xx"
+```
+
+If your distribution still packages it, install it from there (e.g. `sudo apt install nvidia-driver-470` on
+Ubuntu). On newer kernels, where the official 470 driver no longer builds, use the community patches from
+[joanbm/nvidia-470xx-linux-mainline](https://github.com/joanbm/nvidia-470xx-linux-mainline) (iapetus runs
+Linux 7.0 this way). Maxwell-only machines can probably use a newer driver, but we haven't tested that.
+
+**2. Docker with the NVIDIA Container Toolkit.** Install the toolkit following
+[NVIDIA's guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
+then register its runtime with Docker:
+
+```bash
+sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker
+```
+
+**3. A CPU with AVX2** (Intel Haswell or newer, AMD Zen). The image is compiled for Haswell, and older CPUs
+crash with `Illegal instruction`:
+
+```bash
+grep -qw avx2 /proc/cpuinfo && echo "AVX2: ok"
+```
+
+**4. Pull and run:**
+
 ```bash
 docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
+
+docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
+  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus \
+  python -c "import torch; print(torch.__version__, [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())], torch.cuda.has_magma)"
 ```
+
+> [!IMPORTANT]
+> `--runtime=nvidia` and `-e NVIDIA_VISIBLE_DEVICES=all` expose the GPUs. `--ipc=host` (or `--shm-size=8g`) is
+> required for NCCL: Kepler ↔ Maxwell has no P2P, and NCCL's shared-memory fallback fails with `SIGBUS` under
+> Docker's default 64 MB `/dev/shm`.
+
+The container runs as the owner of the mounted `/workspace`, so files you create are yours. Pin a release
+(`2.14.0-cuda11.8-iapetus-r1`, see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)) for
+reproducible work. More examples (torchrun, MPI, C++ extensions, metatomic) are in [`docs/USAGE.md`](docs/USAGE.md),
+and the full hardware list is under [Will it run on my machine?](#will-it-run-on-my-machine).
+
+### Test it on your hardware
+
+The test suites live in this repository. Clone it and mount it as `/workspace`:
+
+```bash
+git clone https://github.com/kazeevn/pytorch-iapetus.git && cd pytorch-iapetus
+IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
+for t in test_magma test_torch_scatter test_metatomic test_openequivariance; do
+  docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
+    "$IMAGE" python "tests/$t.py"
+done
+IMAGE="$IMAGE" tests/run_unit_tests.sh
+IMAGE="$IMAGE" tests/run_distributed_tests.sh
+```
+
+If it works (or fails in an interesting way) on hardware we haven't tested, please open an issue. We'd love
+to hear what other museum pieces are still running.
 
 ---
 
@@ -20,7 +82,7 @@ machine mostly useless?"* It said: *"For modern AI and heavy production scientif
 mostly obsolete."* That was fair. The official PyTorch binaries dropped Kepler years ago, cuDNN 8 won't run
 on it, and PyTorch 2.14 hard-requires CUDA 12.6, which won't run on it either. Six weeks later the same box
 runs PyTorch 2.14 on Python 3.12, built from source with oneMKL and oneDNN. It has GPU MAGMA (`torch.linalg.eig`
-on a 2012 Tesla card, with errors around 1e-15), NCCL patched to work without stream-ordered memory pools, and NCCL
+on a Tesla model from 2012, with errors around 1e-15), NCCL patched to work without stream-ordered memory pools, and NCCL
 collectives across two Kepler cards and one Maxwell card that don't share a GPU generation or PCIe peer-to-peer access.
 On top of that sit metatomic, torch_scatter and OpenEquivariance. One of us looked at PyTorch 2.8 running
 on a K20c and typed *"Wow! Amazing!"*, and we still feel that way. The machine has meanwhile done real
@@ -86,40 +148,6 @@ Our reference machine:
 | `cuda:0` | Tesla K20c | Kepler | `sm_35` | 5 GB |
 | `cuda:1` | Tesla K20c | Kepler | `sm_35` | 5 GB |
 | `cuda:2` | GeForce GTX 750 Ti | Maxwell | `sm_50` | 2 GB |
-
-## Quick start
-
-```bash
-docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
-
-docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
-  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus \
-  python -c "import torch; print(torch.__version__, [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())], torch.cuda.has_magma)"
-```
-
-> [!IMPORTANT]
-> `--runtime=nvidia` and `-e NVIDIA_VISIBLE_DEVICES=all` expose the GPUs. `--ipc=host` (or `--shm-size=8g`) is required for NCCL: Kepler ↔ Maxwell has no P2P, and NCCL's shared-memory
-> fallback fails with `SIGBUS` under Docker's default 64 MB `/dev/shm`.
-
-More examples (torchrun, MPI, C++ extensions, metatomic) are in [`docs/USAGE.md`](docs/USAGE.md).
-
-### Test it on your hardware
-
-The test suites live in this repository. Clone it and mount it as `/workspace`:
-
-```bash
-git clone https://github.com/kazeevn/pytorch-iapetus.git && cd pytorch-iapetus
-IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
-for t in test_magma test_torch_scatter test_metatomic test_openequivariance; do
-  docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
-    "$IMAGE" python "tests/$t.py"
-done
-IMAGE="$IMAGE" tests/run_unit_tests.sh
-IMAGE="$IMAGE" tests/run_distributed_tests.sh
-```
-
-If it works (or fails in an interesting way) on hardware we haven't tested, please open an issue. We'd love
-to hear what other museum pieces are still running.
 
 ---
 
@@ -204,8 +232,11 @@ pytorch-iapetus/
 
 ## License
 
-The build scripts, Dockerfiles, tests and documentation in this repository are licensed under the
-[Apache License 2.0](LICENSE). Third-party components keep their own licenses: our forks of PyTorch,
-NCCL and OpenEquivariance (in `third_party/`), and everything installed in the image, including the
-NVIDIA CUDA toolkit (NVIDIA EULA), Intel oneAPI (Intel Simplified Software License), MAGMA and the
-pinned Python packages.
+**This repository** (build scripts, Dockerfiles, tests and documentation) is licensed under the
+[Apache License 2.0](LICENSE). Our forks in `third_party/` keep their upstream licenses.
+
+**The container image** is a derivative of NVIDIA's `nvidia/cuda` image. It is distributed under the
+[NVIDIA Deep Learning Container License](https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license),
+included in the image as `/NGC-DL-CONTAINER-LICENSE`, and under the licenses of the software it contains:
+Intel oneAPI / oneMKL, PyTorch, NCCL, MAGMA, the Ubuntu packages and the pinned Python packages. By using the
+image you accept those terms. Our own files in the image are Apache 2.0.

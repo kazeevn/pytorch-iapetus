@@ -90,6 +90,12 @@ Requirements (CPU with AVX2, Kepler \`sm_35\`/Maxwell \`sm_50\` GPU, NVIDIA driv
 | :--- | :--- |
 $COMPONENTS
 
+## License
+
+The image is a derivative of \`nvidia/cuda\` and is distributed under the NVIDIA Deep Learning Container
+License (\`/NGC-DL-CONTAINER-LICENSE\` in the image) and the licenses of the software it contains; by using it
+you accept those terms. This repository's own files are Apache 2.0.
+
 ## Wheel
 
 \`$(basename "$WHEEL")\` is the PyTorch wheel installed in the image. It is not self-contained: it links
