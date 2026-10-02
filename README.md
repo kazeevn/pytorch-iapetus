@@ -1,4 +1,4 @@
-# PyTorch 2.14 for GPUs that everyone else gave up on
+# PyTorch 2.14 for NVIDIA Kepler (sm\_35) and Maxwell (sm\_50)
 
 This is a Docker image and the recipe behind it. It runs PyTorch 2.14, Python 3.12 and an atomistic-ML stack on NVIDIA Kepler (`sm_35`) and Maxwell (`sm_50`) GPUs, using CUDA 11.8 on the last driver that still supports Kepler (470).
 
