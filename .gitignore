@@ -13,3 +13,6 @@ __pycache__/
 /archive/mace-experiments/model_cache/
 /archive/*.whl
 /archive/*.whl.bak
+
+# Private correspondence
+*.eml

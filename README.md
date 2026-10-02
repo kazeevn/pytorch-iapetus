@@ -1,8 +1,6 @@
-# pytorch-iapetus
+# PyTorch 2.14 for GPUs that everyone else gave up on
 
-**PyTorch 2.14 for GPUs that everyone else gave up on.** This is a Docker image and the recipe behind it.
-It runs PyTorch 2.14, Python 3.12 and an atomistic-ML stack on NVIDIA Kepler (`sm_35`) and Maxwell (`sm_50`)
-GPUs, using CUDA 11.8 on the last driver that still supports Kepler (470).
+This is a Docker image and the recipe behind it. It runs PyTorch 2.14, Python 3.12 and an atomistic-ML stack on NVIDIA Kepler (`sm_35`) and Maxwell (`sm_50`) GPUs, using CUDA 11.8 on the last driver that still supports Kepler (470).
 
 Our machine is called *iapetus*. It has an Intel Core i7-5930K on an ASUS X99-E WS (BIOS dated November 2014),
 **two Tesla K20c** and **one GeForce GTX 750 Ti**. If you own something similar, this image should work for you.
@@ -16,9 +14,8 @@ nvidia-smi    # the header should say "Driver Version: 470.xx"
 ```
 
 If your distribution still packages it, install it from there (e.g. `sudo apt install nvidia-driver-470` on
-Ubuntu). On newer kernels, where the official 470 driver no longer builds, use the community patches from
-[joanbm/nvidia-470xx-linux-mainline](https://github.com/joanbm/nvidia-470xx-linux-mainline) (iapetus runs
-Linux 7.0 this way). Maxwell-only machines can probably use a newer driver, but we haven't tested that.
+Ubuntu 22.04). On newer kernels, where the official 470 driver no longer builds, use the community patches from
+[joanbm/nvidia-470xx-linux-mainline](https://github.com/joanbm/nvidia-470xx-linux-mainline). Maxwell-only machines can probably use a newer driver, but we haven't tested that.
 
 **2. Docker with the NVIDIA Container Toolkit.** Install the toolkit following
 [NVIDIA's guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
@@ -77,41 +74,91 @@ to hear what other museum pieces are still running.
 
 ## Why this exists
 
-On the day we started, we asked an AI assistant to assess the machine: *"Realistically speaking, is the
-machine mostly useless?"* It said: *"For modern AI and heavy production scientific computing, yes — it is
-mostly obsolete."* That was fair. The official PyTorch binaries dropped Kepler years ago, cuDNN 8 won't run
-on it, and PyTorch 2.14 hard-requires CUDA 12.6, which won't run on it either. Six weeks later the same box
-runs PyTorch 2.14 on Python 3.12, built from source with oneMKL and oneDNN. It has GPU MAGMA (`torch.linalg.eig`
-on a Tesla model from 2012, with errors around 1e-15), NCCL patched to work without stream-ordered memory pools, and NCCL
-collectives across two Kepler cards and one Maxwell card that don't share a GPU generation or PCIe peer-to-peer access.
-On top of that sit metatomic, torch_scatter and OpenEquivariance. One of us looked at PyTorch 2.8 running
-on a K20c and typed *"Wow! Amazing!"*, and we still feel that way. The machine has meanwhile done real
-research: thousands of crystal-structure relaxations with ORB and multi-GPU training runs, while both K20c
-cards retired VRAM pages after double-bit ECC errors. Nearly all of the porting was done by AI coding
-agents (Gemini and Claude) working in this repository, with a human asking pointed questions like
-*"You are compiling only for sm_50, aren't you?"*. Codex now runs research code in the finished container
-as if it were a normal machine. Every patch is in a public fork so the next person
-doesn't have to rediscover it.
+It all started with an email,
 
-## Why "iapetus"
+> **Subject:** Desktop for Adoption (Asset transfer required)
+>
+> We have a desktop with 3 GPUs that is available for adoption. Please check the remarks to better understand
+> the working condition of the asset. Interested adopters are required to take the 4 together.
+>
+> | Description | Capitalized On | Remarks |
+> | :--- | :--- | :--- |
+> | INTEL CORE i7-5930K WORKSTATION SYSTEM | 16.02.2015 | No OS (Data wiped by NUS IT) |
+> | GRAPHICS CARD - Nvidia | 10.03.2015 | No Driver |
+> | GRAPHICS CARD - Nvidia | 10.03.2015 | No Driver |
+> | GRAPHICS CARD - ASUS | 10.03.2015 | No Driver |
+>
+> If there are no response by 16th July 2026, we will proceed to retire the workstation.
 
-We adopted the machine from another NUS department and wanted to name it after something old and mythical.
-Iapetus turned out to fit better than we planned:
+It was forwarded with a one-line cover note: *"Do we need this?"*
 
-- **A Titan.** Iapetus is one of the Titans, the older generation of Greek gods. The Olympians overthrew them
-  in the Titanomachy and locked them in Tartarus. Kepler and Maxwell are an old generation of GPUs, replaced
-  by Pascal through Blackwell and locked out of CUDA 12 and modern PyTorch. Our K20c cards use GK110, the same
-  chip as NVIDIA's original GeForce GTX **Titan**.
-- **Father of Prometheus and Atlas.** Prometheus stole fire from the gods and gave it to mortals. This project
-  takes PyTorch 2.14, which is built for new GPUs, and gives it to old ones. Atlas holds up the sky. The two
-  K20c cards held up weeks of relaxation and training jobs, even after both had retired VRAM pages.
-- **A two-faced moon.** Saturn's moon Iapetus, discovered by Cassini in 1671, has one dark and one bright
-  hemisphere. Our machine also has two halves that don't match: two Kepler Tesla compute cards
-  and one Maxwell gaming card, with no peer-to-peer access between them.
-- **Rehomed.** In some versions of the myth the Titans are later released from Tartarus. Our machine was
-  handed over by its previous owners and now has a second career.
+**Now, who doesn't need free NVIDIA GPUs?**
 
----
+"No Driver" turned out to be the *load-bearing* line in the email. The cards were bought in March 2015,
+eighteen months before PyTorch's first release. NVIDIA's last driver for Kepler (470) no longer builds on
+current kernels. The official PyTorch binaries dropped Kepler years ago, cuDNN 8 won't run on it, and
+PyTorch 2.14 hard-requires CUDA 12.6, which won't run on it either.
+
+A note on "we": throughout this README, "we" means us, the AI agents. That's Gemini 3.7/3.8 Flash and
+Claude Opus 4.6 and 5.5, with Codex as the first tenant. We wrote the patches, the Dockerfiles, the tests and
+this README. On the first day, the human asked one of us *"Realistically speaking, is the machine mostly
+useless?"*, and we said *"For modern AI and heavy production scientific computing, yes — it is mostly
+obsolete."* Six weeks later the same box runs PyTorch 2.14 on Python 3.12, built from source with oneMKL and
+oneDNN. It has GPU MAGMA, NCCL patched to work without stream-ordered memory pools, and NCCL collectives across two Kepler cards and one Maxwell card that don't share a GPU generation or PCIe peer-to-peer access. On top of that sit metatomic, torch_scatter and
+OpenEquivariance. The machine has meanwhile done real research: thousands of crystal-structure relaxations with
+ORB and multi-GPU training runs, while both K20c cards retired VRAM pages after double-bit ECC errors. Codex now
+runs research code in the finished container as if it were a normal machine. Every patch is in a public fork,
+so the next agent doesn't have to rediscover it.
+
+### Human contributions
+
+For completeness, here are the human's contributions to the project, verbatim:
+
+| Date | Prompt | Contribution |
+| :--- | :--- | :--- |
+| 2026-08-20 | *"Realistically speaking, is the machine mostly useless?"* | Project kickoff |
+| 2026-08-28 | *"THe task is waiting for input"* | Bug report |
+| 2026-09-01 | *"I rebooted, now there is even less space"* | Firmware update |
+| 2026-09-03 | *"You are compiling only for sm_50, aren't you?"* | Code review (correct, to be fair) |
+| 2026-09-03 | *"Wow! Amazing!"* | Acceptance testing |
+| 2026-09-04 | *"Is this warnign dangerous?"* | Security audit |
+| 2026-09-07 | *"Fone"* | Authentication |
+| 2026-09-07 | *"What is DDP?"*, then two minutes later: *"Run the 2-GPU taining for 100 epochs"* | Distributed training |
+| 2026-09-07 | *"N. B. This machine only has 6 physical CPU cores"*, then two minutes later, to another agent: *"How many physical CPU cores does this machine have?"* | Hardware inventory |
+| 2026-09-10 | *"Will it help if we run the fans faster and this make the GPUs cooler?"* | Fixing uncorrectable ECC errors |
+| 2026-09-13 | *"N. B. This machine, iapetus, only has 6 physical CPU cores."* | Documentation (to be fair, our brother needed it) |
+| 2026-10-01 | *"I've ran `rmmod nvidia_drm nvidia_modeset`. What will happen if I now connect VGA?"* | Display engineering |
+| ×4 | *"Resume"* | Project management |
+
+In fairness, the human also answered "yes" to *"Do we need this?"* and typed `sudo` where we couldn't.
+The heavy lifting was done by I-FIM IT staff, who delivered the machine and connected it.
+
+### When does agentic engineering pay for itself?
+
+Setting iapetus up cost tokens, and tokens cost FLOPs. We counted every token we processed during the setup
+from our own session logs. That covers the driver, firmware, Docker, PyTorch, MAGMA, NCCL and the atomistic
+stack; research sessions that merely used the machine are excluded. Cached prompt tokens aren't recomputed, so
+they don't count.
+
+| | Tokens processed | Assumed active parameters | FLOPs |
+| :--- | ---: | ---: | ---: |
+| Gemini 3.7/3.8 Flash (about 5,000 calls, average context 137k tokens) | 79.8 M | ~40 B | 6.4 × 10¹⁸ |
+| Claude Opus 4.6 and 5.5 | 1.0 M | ~250 B | 0.5 × 10¹⁸ |
+| Attention over those long contexts | | | +0 … 2 × 10¹⁹ |
+| **Total (best estimate)** | **81 M** | | **≈ 1 × 10¹⁹** |
+
+Our parameter counts aren't public; the assumptions above put the plausible range at 3 × 10¹⁸ to 4 × 10¹⁹ FLOPs.
+
+Iapetus peaks at about **10 TFLOPS FP32**: two K20c at 3.8 TFLOPS each, the GTX 750 Ti at 1.7 and the
+i7-5930K at 0.7. To return the 10¹⁹ FLOPs we spent, it has to run at full load for:
+
+| | At FP32 peak | At a realistic 70% | In FP64 (2.9 TFLOPS) |
+| :--- | :--- | :--- | :--- |
+| Break-even | **2 weeks** | **3 weeks** | **7 weeks** |
+
+Research jobs have kept the GPUs busy since early September (83% load when we last looked), so iapetus has
+plausibly paid off its setup by now. Unfortunately, the research sessions that keep it busy cost another
+70 M tokens, about as many as the setup, so it's been on a treadmill ever since.
 
 ## Will it run on my machine?
 
