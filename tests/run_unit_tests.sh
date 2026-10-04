@@ -2,7 +2,7 @@
 # Runs a curated subset of the official PyTorch unit tests inside the runtime image.
 set -e
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
+IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
 
 echo "=== Running Official PyTorch Unit Tests ($IMAGE) ==="
 
@@ -13,6 +13,7 @@ docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEV
   "$IMAGE" \
   bash -c '
 set -e
+/opt/venv312/bin/python /workspace/tests/test_cudnn.py
 /opt/venv312/bin/python /workspace/tests/test_torch_scatter.py
 /opt/venv312/bin/python /workspace/tests/test_torch_sparse.py
 /opt/venv312/bin/python /workspace/tests/test_openequivariance.py

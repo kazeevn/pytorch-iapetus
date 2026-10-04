@@ -6,7 +6,8 @@ GPUs on driver 470 (CUDA 11.8). **Follow [`docs/CONVENTIONS.md`](docs/CONVENTION
 - **Sources:** if you patch a library, fork it to `github.com/kazeevn`, commit on a `<upstream-tag>-kepler`
   branch, and add it as a submodule in `third_party/`. Never vendor source trees, tarballs or wheels into this repo.
   Pin unpatched dependencies (upstream submodule commit, or URL + sha256).
-- **Images:** base `nvidia/cuda:11.8.0-devel-ubuntu22.04` + `apt-get update && apt-get dist-upgrade -y`.
+- **Images:** base `nvidia/cuda:11.8.0-devel-ubuntu22.04` + `apt-get update && apt-get dist-upgrade -y`;
+  pin cuDNN runtime and headers to `8.7.0.84-1+cuda11.8` for `sm_35` support.
 - **Compilers:** GCC 12 for host code (C++20 allowed). nvcc 11.8 uses GCC 11 (`CUDAHOSTCXX=/usr/bin/g++-11`)
   and C++17. If CUDA code needs C++20, patch it to C++17 (fork + submodule). Don't export `CC`/`CXX`:
   `torch.utils.cpp_extension` forwards `$CC` to nvcc.

@@ -100,6 +100,17 @@ RUN JOBS=${JOBS} /tmp/build_magma.sh /opt/magma
 FROM toolchain AS builder
 COPY --from=nccl /opt/nccl /opt/nccl
 COPY --from=magma /opt/magma /opt/magma
+# cuDNN is needed by PyTorch, not the NCCL/MAGMA builds. Install it here so
+# changing its pin does not rebuild those source libraries.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libcudnn8=8.7.0.84-1+cuda11.8 \
+        libcudnn8-dev=8.7.0.84-1+cuda11.8 && \
+    apt-mark hold libcudnn8 libcudnn8-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    ldconfig && \
+    test "$(dpkg-query -W -f='${Version}' libcudnn8)" = 8.7.0.84-1+cuda11.8 && \
+    test "$(dpkg-query -W -f='${Version}' libcudnn8-dev)" = 8.7.0.84-1+cuda11.8
 RUN echo /opt/nccl/lib > /etc/ld.so.conf.d/nccl.conf && \
     echo /opt/magma/lib > /etc/ld.so.conf.d/magma.conf && \
     ln -sf /opt/magma /usr/local/magma && \

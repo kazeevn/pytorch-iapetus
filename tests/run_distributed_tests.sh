@@ -2,7 +2,7 @@
 # Multi-GPU collectives (Gloo, NCCL, MPI) plus official PyTorch distributed tests, in the runtime image.
 set -e
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
+IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
 
 echo "================================================================="
 echo " Starting Full Distributed & Device Unit Test Verification Suite "

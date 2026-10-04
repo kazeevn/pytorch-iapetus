@@ -48,7 +48,7 @@ docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
 > Docker's default 64 MB `/dev/shm`.
 
 The container runs as the owner of the mounted `/workspace`, so files you create are yours. Pin a release
-(`2.14.0-cuda11.8-iapetus-r1`, see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)) for
+(`2.14.0-cuda11.8-iapetus-r3`, see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)) for
 reproducible work. More examples (torchrun, MPI, C++ extensions, metatomic) are in [`docs/USAGE.md`](docs/USAGE.md),
 and the full hardware list is under [Will it run on my machine?](#will-it-run-on-my-machine).
 
@@ -96,7 +96,7 @@ It was forwarded with a one-line cover note: *"Do we need this?"*
 
 "No Driver" turned out to be the *load-bearing* line in the email. The cards were bought in March 2015,
 eighteen months before PyTorch's first release. NVIDIA's last driver for Kepler (470) no longer builds on
-current kernels. The official PyTorch binaries dropped Kepler years ago, cuDNN 8 won't run on it, and
+current kernels. The official PyTorch binaries dropped Kepler years ago, cuDNN 8.8 and later won't run on it, and
 PyTorch 2.14 hard-requires CUDA 12.6, which won't run on it either.
 
 A note on "we": throughout this README, "we" means us, the AI agents. That's Gemini 3.7/3.8 Flash and
@@ -174,7 +174,8 @@ plausibly paid off its setup by now. Unfortunately, the research sessions that k
 
 - **PyTorch 2.14.0** ([kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.0-kepler)):
   CUDA 11.8 support restored, C++17 fallbacks in CUDA-visible code, NVRTC `--std=c++17` on CUDA < 12,
-  analytic 2×2/3×3 determinants. cuDNN is disabled because cuDNN 8 doesn't support Kepler.
+  analytic 2×2/3×3 determinants. The current build uses cuDNN 8.7, the last release supporting Kepler,
+  with PyTorch's nested cuDNN frontend pinned to upstream v0.9.2 for CUDA 11.8 compatibility.
 - **CPU:** Intel oneMKL (BLAS/LAPACK, OpenMP threading), oneDNN, `-march=native` (Haswell: AVX2/FMA).
 - **GPU linear algebra:** MAGMA 2.10.0 against oneMKL (`torch.cuda.has_magma == True`, GPU `torch.linalg.eig`).
 - **Distributed:** NCCL 2.23.4 ([kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler),
@@ -183,7 +184,7 @@ plausibly paid off its setup by now. Unfortunately, the research sessions that k
   against this PyTorch. torch_scatter 2.1.2 and torch_sparse 0.6.18 compiled from source for Kepler + Maxwell. OpenEquivariance 0.7.0
   ([kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler)) with CUDA 11 Driver API
   fallback and multi-device kernel caching. ASE, vesin, warp-lang, orb-models, pymatgen and others are pinned in [`docker/requirements.txt`](docker/requirements.txt).
-- **Toolchain:** CUDA 11.8, GCC 12 (host) + GCC 11 (nvcc host compiler), oneAPI, CMake. `torch.utils.cpp_extension`
+- **Toolchain:** CUDA 11.8, cuDNN 8.7, GCC 12 (host) + GCC 11 (nvcc host compiler), oneAPI, CMake. `torch.utils.cpp_extension`
   builds work out of the box (see [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)).
 - **Multi-user entrypoint:** the container runs as the owner of the mounted `/workspace`, so files you create
   belong to you and not root (see [`docs/MULTIUSER.md`](docs/MULTIUSER.md)).
@@ -213,13 +214,14 @@ cd pytorch-iapetus
 git submodule update --init third_party/pytorch   # large; only needed to rebuild PyTorch
 git -C third_party/pytorch submodule update --init --recursive   # only for a full PyTorch rebuild
 
-scripts/build_images.sh builder    # iapetus/builder:cuda11.8-py312 (compiles NCCL + MAGMA)
-scripts/build_pytorch.sh           # PyTorch wheel → dist/ (runs inside the builder)
-scripts/build_images.sh runtime    # iapetus/pytorch:2.14.0-cuda11.8-py312 (needs dist/*.whl)
+scripts/build_images.sh builder    # iapetus/builder:cuda11.8-cudnn8.7-py312 (compiles NCCL + MAGMA)
+scripts/build_pytorch.sh           # PyTorch 2.14.0.post3 wheel → dist/ (runs inside the builder)
+scripts/build_images.sh runtime    # iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312 (needs post3 wheel)
 ```
 
-The PyTorch wheel is attached to each [GitHub Release](https://github.com/kazeevn/pytorch-iapetus/releases). It is
-not self-contained: it needs the CUDA 11.8, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
+Published PyTorch wheels are attached to [GitHub Releases](https://github.com/kazeevn/pytorch-iapetus/releases).
+The `post3` wheel is attached to release `r3`. It is not self-contained: it needs the CUDA 11.8,
+cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 
 ### Images
 
@@ -227,13 +229,14 @@ not self-contained: it needs the CUDA 11.8, NCCL, MAGMA, oneMKL and OpenMPI libr
 | :--- | :--- |
 | `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus-r<N>` | a published release of `iapetus/pytorch`; never changes |
 | `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus`, `:latest` | the newest release for PyTorch 2.14.0 / overall |
-| `iapetus/builder:cuda11.8-py312` | `docker/builder.Dockerfile` (local only) |
-| `iapetus/pytorch:2.14.0-cuda11.8-py312` | `docker/runtime.Dockerfile` (local build tag) |
+| `iapetus/builder:cuda11.8-cudnn8.7-py312` | `docker/builder.Dockerfile` (local build tag) |
+| `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312` | `docker/runtime.Dockerfile` (local build tag) |
+| `iapetus/pytorch:2.14.0-cuda11.8-py312` | Existing image, kept for current users |
 
 ### Versions and releases
 
 Tags follow the official `pytorch/pytorch` images (`2.14.0-cuda11.8-cudnn9-runtime` there), with `iapetus` as
-the variant: `2.14.0-cuda11.8-iapetus-r1`. There is no cuDNN, since cuDNN doesn't support Kepler. The revision
+the variant: `2.14.0-cuda11.8-iapetus-r1`. Revision `r3` uses cuDNN 8.7 for Kepler and Maxwell. The revision
 `rN` goes up whenever the image changes without a new PyTorch version (new packages, patches, dependency
 updates, a rebuilt wheel) and restarts at `r1` for a new PyTorch version. Each release has the same git tag
 (`v2.14.0-cuda11.8-iapetus-r1`) and a
@@ -246,7 +249,7 @@ follows the newest revision. Maintainers publish with `scripts/release.sh <revis
 ```text
 pytorch-iapetus/
 ├── docker/
-│   ├── builder.Dockerfile    # CUDA 11.8 toolchain + GCC 12/11 + oneMKL/oneDNN + OpenMPI + NCCL + MAGMA
+│   ├── builder.Dockerfile    # CUDA 11.8 + cuDNN 8.7 + GCC 12/11 + oneMKL/oneDNN + OpenMPI + NCCL + MAGMA
 │   ├── runtime.Dockerfile    # builder + torch wheel + atomistic-ML stack + multi-user entrypoint
 │   ├── requirements.txt      # pinned runtime Python packages
 │   ├── entrypoint.sh         # dynamic UID/GID + privilege drop

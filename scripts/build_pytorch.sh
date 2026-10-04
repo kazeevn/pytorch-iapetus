@@ -5,7 +5,7 @@
 # mounted at /workspace, as the invoking user (so build products are not root-owned).
 set -euo pipefail
 
-BUILDER_TAG="${BUILDER_TAG:-iapetus/builder:cuda11.8-py312}"
+BUILDER_TAG="${BUILDER_TAG:-iapetus/builder:cuda11.8-cudnn8.7-py312}"
 
 if [ ! -f /.dockerenv ]; then
     REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -51,11 +51,12 @@ export CXXFLAGS="-march=native"
 # Kepler sm_35 + Maxwell sm_50 only
 export TORCH_CUDA_ARCH_LIST="3.5;5.0"
 export PYTORCH_BUILD_VERSION="2.14.0"
-export PYTORCH_BUILD_NUMBER="2"
+export PYTORCH_BUILD_NUMBER="3"
 
 export MAX_JOBS="${MAX_JOBS:-4}"
 export USE_CUDA=1
-export USE_CUDNN=0
+export USE_CUDNN=1
+export USE_NVRTC=1
 export BUILD_TEST=0
 export USE_DISTRIBUTED=1
 export USE_GLOO=1

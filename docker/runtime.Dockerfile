@@ -3,19 +3,20 @@
 #
 # Build from the repository root:  scripts/build_images.sh runtime
 
-ARG BUILDER_IMAGE=iapetus/builder:cuda11.8-py312
+ARG BUILDER_IMAGE=iapetus/builder:cuda11.8-cudnn8.7-py312
 FROM ${BUILDER_IMAGE}
 
-ARG TORCH_WHEEL=dist/torch-2.14.0.post2-cp312-cp312-linux_x86_64.whl
+ARG TORCH_WHEEL=dist/torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl
 
 LABEL org.opencontainers.image.source="https://github.com/kazeevn/pytorch-iapetus" \
-      org.opencontainers.image.description="PyTorch 2.14 + CUDA 11.8 for Kepler sm_35 / Maxwell sm_50 GPUs on NVIDIA driver 470; built with -march=native for Haswell (AVX2)" \
+      org.opencontainers.image.description="PyTorch 2.14 + CUDA 11.8 + cuDNN 8.7 for Kepler sm_35 / Maxwell sm_50 GPUs on NVIDIA driver 470; built with -march=native for Haswell (AVX2)" \
       org.opencontainers.image.title="pytorch-iapetus"
 
 USER root
 
 COPY ${TORCH_WHEEL} /tmp/wheels/
 RUN uv pip install --python /opt/venv312 --no-deps /tmp/wheels/*.whl && rm -rf /tmp/wheels
+RUN python -c 'import torch; assert torch.backends.cudnn.is_available(); assert torch.backends.cudnn.version() == 8700'
 
 COPY docker/requirements.txt /tmp/requirements.txt
 RUN uv pip install --python /opt/venv312 --no-deps -r /tmp/requirements.txt && rm /tmp/requirements.txt

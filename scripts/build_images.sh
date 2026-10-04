@@ -6,9 +6,10 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-BUILDER_TAG="${BUILDER_TAG:-iapetus/builder:cuda11.8-py312}"
-RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
-JOBS="${JOBS:-4}"
+BUILDER_TAG="${BUILDER_TAG:-iapetus/builder:cuda11.8-cudnn8.7-py312}"
+RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
+# NCCL and MAGMA build in parallel, so three jobs each use about six cores total.
+JOBS="${JOBS:-3}"
 TARGET="${1:-all}"
 
 git submodule update --init --recursive third_party/nccl third_party/pytorch_scatter third_party/pytorch_sparse third_party/openequivariance

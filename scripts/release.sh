@@ -15,7 +15,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 REVISION="${1:?usage: scripts/release.sh <revision> [changes.md]}"
 CHANGES="${2:-}"
-RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
+RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
 REPO="${REPO:-ghcr.io/kazeevn/pytorch}"
 
 [[ "$REVISION" =~ ^[1-9][0-9]*$ ]] || { echo "revision must be a positive integer" >&2; exit 1; }
@@ -61,6 +61,7 @@ import importlib.metadata as md
 import torch
 nccl = ".".join(map(str, torch.cuda.nccl.version()))
 print(f"| PyTorch | {torch.__version__} (CUDA {torch.version.cuda}, sm_35 + sm_50) |")
+print(f"| cuDNN | {torch.backends.cudnn.version()} |")
 print(f"| NCCL | {nccl} |")
 print(f"| MAGMA | {'yes' if torch.cuda.has_magma else 'no'} |")
 for p in ["numpy", "metatensor-torch", "metatomic-torch", "torch-scatter", "torch-sparse", "openequivariance", "ase", "orb-models", "warp-lang"]:
@@ -99,7 +100,7 @@ you accept those terms. This repository's own files are Apache 2.0.
 ## Wheel
 
 \`$(basename "$WHEEL")\` is the PyTorch wheel installed in the image. It is not self-contained: it links
-against CUDA 11.8, our patched NCCL 2.23.4, MAGMA 2.10.0, oneMKL and OpenMPI 4.1 as installed in the builder
+against CUDA 11.8, cuDNN 8.7, our patched NCCL 2.23.4, MAGMA 2.10.0, oneMKL and OpenMPI 4.1 as installed in the builder
 image (\`docker/builder.Dockerfile\`), and is compiled with \`-march=native\` for Haswell. Use the image unless you
 are reproducing that environment.
 EOF
