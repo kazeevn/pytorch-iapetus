@@ -2,9 +2,9 @@
 # Publish a release: push the runtime image to GHCR and create a GitHub Release with the torch wheel.
 #   scripts/release.sh <revision> [changes.md]
 #
-# Versions mirror the official pytorch/pytorch tags: <pytorch>-cuda<cuda>-iapetus-r<revision>,
-# e.g. 2.14.0-cuda11.8-iapetus-r3; the revision restarts at 1 for a new PyTorch version.
-# The image is pushed as :<version> (immutable), :<pytorch>-cuda<cuda>-iapetus (newest revision) and :latest;
+# Versions mirror the official pytorch/pytorch tags: <pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus-r<revision>,
+# e.g. 2.14.0-cuda11.8-cudnn8.7-iapetus-r3; the revision restarts at 1 for a new PyTorch version.
+# The image is pushed as :<version> (immutable), :<pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus (newest revision) and :latest;
 # the commit is tagged v<version>. changes.md (optional) is put at the top of the release notes.
 #
 # Prerequisites: a clean, pushed checkout; the runtime image built from it (scripts/build_images.sh runtime);
@@ -38,7 +38,8 @@ in_image() { docker run --rm --entrypoint /opt/venv312/bin/python "$RUNTIME_TAG"
 TORCH_FULL="$(in_image 'import torch; print(torch.__version__)')"
 TORCH="$(grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' <<<"$TORCH_FULL")"
 CUDA="$(in_image 'import torch; print(torch.version.cuda)')"
-SERIES="$TORCH-cuda$CUDA-iapetus"
+CUDNN="$(in_image 'import torch; v = torch.backends.cudnn.version(); assert v == 8700, v; print(f"{v // 1000}.{(v // 100) % 10}")')"
+SERIES="$TORCH-cuda$CUDA-cudnn$CUDNN-iapetus"
 VERSION="$SERIES-r$REVISION"
 TAG="v$VERSION"
 

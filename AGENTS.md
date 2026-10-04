@@ -22,7 +22,7 @@ Practicalities:
 - The host has 6 physical cores; keep build parallelism at about 4–6 jobs.
 - Tag new images under `iapetus/*`. Don't retag or remove `iapetus/pytorch:2.14.0-cuda11.8-py312`
   without asking: other users run it.
-- Releases are `<pytorch>-cuda<cuda>-iapetus-r<N>` on `ghcr.io/kazeevn/pytorch` (see `docs/CONVENTIONS.md`), published with `scripts/release.sh`; release only when asked.
+- Releases are `<pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus-r<N>` on `ghcr.io/kazeevn/pytorch` (see `docs/CONVENTIONS.md`), published with `scripts/release.sh`; release only when asked.
 - Update the compliance table in `docs/CONVENTIONS.md` when you fix or introduce a deviation.
 - `docs/*.md` describe the current code; keep them in sync when you change it. Historical notes go to
   `docs/archive/`.

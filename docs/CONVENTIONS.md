@@ -31,10 +31,11 @@ setups, research that led to a decision) moves to `docs/archive/`. Archived docu
 the code, and their links and paths may be stale.
 
 **Releases.** Versions mirror the official `pytorch/pytorch` tags with `iapetus` as the variant:
-`<PyTorch>-cuda<CUDA>-iapetus-r<revision>` (`2.14.0-cuda11.8-iapetus-r1`, `-r2`, ...). Bump the revision for any
-change to the published image; restart at `r1` with a new PyTorch version. `scripts/release.sh <revision>`
-pushes the runtime image to `ghcr.io/kazeevn/pytorch` as `:<version>` (immutable),
-`:<PyTorch>-cuda<CUDA>-iapetus` and `:latest`, tags the commit `v<version>`, and creates a GitHub Release with the image digest, component
+`<PyTorch>-cuda<CUDA>-cudnn<cuDNN>-iapetus-r<revision>` (for example,
+`2.14.0-cuda11.8-cudnn8.7-iapetus-r3`). Bump the revision for any change to the published image;
+restart at `r1` with a new PyTorch version. `scripts/release.sh <revision>` pushes the runtime image
+to `ghcr.io/kazeevn/pytorch` as `:<version>` (immutable),
+`:<PyTorch>-cuda<CUDA>-cudnn<cuDNN>-iapetus` and `:latest`, tags the commit `v<version>`, and creates a GitHub Release with the image digest, component
 versions and the torch wheel. Release only images built by `scripts/build_images.sh runtime` from a clean,
 pushed commit (the image's `org.opencontainers.image.revision` label must match `HEAD`), so every release can be
 reproduced from its tag. Local builds keep the `iapetus/*` tags.
@@ -135,4 +136,5 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | OpenEquivariance 0.7.0 | Patched in [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) (branch `v0.7.0-kepler`): CUDA 11 Driver API fallback (`CUmodule`), NVRTC 11.8 flag compatibility, multi-device/multi-architecture kernel caching, and installed LibTorch C ABI detection. Compiled from `third_party/openequivariance` and included in the runtime image |
 | Images (`iapetus/builder`, `iapetus/pytorch`) | Existing `cuda11.8-py312` images built on 2026-10-01 and verified on CPU and Kepler `sm_35` + Maxwell `sm_50` GPUs. New `cuda11.8-cudnn8.7-py312` builder and runtime images built on 2026-10-04; runtime imports all source extensions and passes cuDNN convolution on both K20c GPUs and the GTX 750 Ti |
 | Release `2.14.0-cuda11.8-iapetus-r1` (`ghcr.io/kazeevn/pytorch`) | `iapetus/pytorch` of 2026-10-01 plus source/description/title labels, released with `FORCE=1`: it predates the `revision` label, so it is not tied to a commit by label. It contains the pre-conventions torch wheel listed above |
-| Release `2.14.0-cuda11.8-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | cuDNN 8.7 runtime with `post3` wheel, built from this commit and published with its revision label |
+| Release `2.14.0-cuda11.8-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | cuDNN 8.7 runtime with `post3` wheel, built from commit `e4d54db` and retained under its original tag |
+| Release `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | Current cuDNN 8.7 release with the official-style tag, `post3` wheel, and a revision label matching its Git tag |

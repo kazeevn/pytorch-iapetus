@@ -35,10 +35,10 @@ grep -qw avx2 /proc/cpuinfo && echo "AVX2: ok"
 **4. Pull and run:**
 
 ```bash
-docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
+docker pull ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus
 
 docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
-  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus \
+  -v "$(pwd):/workspace" ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
   python -c "import torch; print(torch.__version__, [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())], torch.cuda.has_magma)"
 ```
 
@@ -48,7 +48,7 @@ docker run --rm -it --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
 > Docker's default 64 MB `/dev/shm`.
 
 The container runs as the owner of the mounted `/workspace`, so files you create are yours. Pin a release
-(`2.14.0-cuda11.8-iapetus-r3`, see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)) for
+(`2.14.0-cuda11.8-cudnn8.7-iapetus-r3`, see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)) for
 reproducible work. More examples (torchrun, MPI, C++ extensions, metatomic) are in [`docs/USAGE.md`](docs/USAGE.md),
 and the full hardware list is under [Will it run on my machine?](#will-it-run-on-my-machine).
 
@@ -58,7 +58,7 @@ The test suites live in this repository. Clone it and mount it as `/workspace`:
 
 ```bash
 git clone https://github.com/kazeevn/pytorch-iapetus.git && cd pytorch-iapetus
-IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
+IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus
 for t in test_magma test_torch_scatter test_torch_sparse test_metatomic test_openequivariance; do
   docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
     "$IMAGE" python "tests/$t.py"
@@ -227,8 +227,8 @@ cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 
 | Tag | Built from |
 | :--- | :--- |
-| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus-r<N>` | a published release of `iapetus/pytorch`; never changes |
-| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus`, `:latest` | the newest release for PyTorch 2.14.0 / overall |
+| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus-r<N>` | a published cuDNN 8.7 release of `iapetus/pytorch`; never changes |
+| `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, `:latest` | the newest cuDNN 8.7 release for PyTorch 2.14.0 / overall |
 | `iapetus/builder:cuda11.8-cudnn8.7-py312` | `docker/builder.Dockerfile` (local build tag) |
 | `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312` | `docker/runtime.Dockerfile` (local build tag) |
 | `iapetus/pytorch:2.14.0-cuda11.8-py312` | Existing image, kept for current users |
@@ -236,13 +236,14 @@ cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 ### Versions and releases
 
 Tags follow the official `pytorch/pytorch` images (`2.14.0-cuda11.8-cudnn9-runtime` there), with `iapetus` as
-the variant: `2.14.0-cuda11.8-iapetus-r1`. Revision `r3` uses cuDNN 8.7 for Kepler and Maxwell. The revision
+the variant: `2.14.0-cuda11.8-cudnn8.7-iapetus-r3`. Revision `r3` uses cuDNN 8.7 for Kepler and Maxwell. The revision
 `rN` goes up whenever the image changes without a new PyTorch version (new packages, patches, dependency
 updates, a rebuilt wheel) and restarts at `r1` for a new PyTorch version. Each release has the same git tag
-(`v2.14.0-cuda11.8-iapetus-r1`) and a
+(`v2.14.0-cuda11.8-cudnn8.7-iapetus-r3`) and a
 [GitHub Release](https://github.com/kazeevn/pytorch-iapetus/releases) with the changes, the image digest,
-component versions and the PyTorch wheel. Pin `…-iapetus-rN` for reproducible work; `2.14.0-cuda11.8-iapetus`
+component versions and the PyTorch wheel. Pin `…-iapetus-rN` for reproducible work; `2.14.0-cuda11.8-cudnn8.7-iapetus`
 follows the newest revision. Maintainers publish with `scripts/release.sh <revision>` (see the script header).
+The older `2.14.0-cuda11.8-iapetus-r1`, `r2`, and `r3` tags remain available under their original names.
 
 ## Repository layout
 
@@ -256,7 +257,7 @@ pytorch-iapetus/
 │   └── sitecustomize.py      # forces TCPStore(use_libuv=False)
 ├── scripts/
 │   ├── build_images.sh       # docker build for builder / runtime
-│   ├── release.sh            # push the image to GHCR + GitHub Release (<pytorch>-cuda<cuda>-iapetus-r<N>)
+│   ├── release.sh            # push the image to GHCR + GitHub Release (<pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus-r<N>)
 │   ├── build_pytorch.sh      # PyTorch wheel → dist/ (runs inside the builder image)
 │   ├── build_nccl.sh         # NCCL from third_party/nccl (used by builder.Dockerfile)
 │   ├── build_magma.sh        # MAGMA from the pinned ICL tarball (used by builder.Dockerfile)
