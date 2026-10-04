@@ -63,7 +63,7 @@ nccl = ".".join(map(str, torch.cuda.nccl.version()))
 print(f"| PyTorch | {torch.__version__} (CUDA {torch.version.cuda}, sm_35 + sm_50) |")
 print(f"| NCCL | {nccl} |")
 print(f"| MAGMA | {'yes' if torch.cuda.has_magma else 'no'} |")
-for p in ["numpy", "metatensor-torch", "metatomic-torch", "torch-scatter", "openequivariance", "ase", "orb-models", "warp-lang"]:
+for p in ["numpy", "metatensor-torch", "metatomic-torch", "torch-scatter", "torch-sparse", "openequivariance", "ase", "orb-models", "warp-lang"]:
     try:
         print(f"| {p} | {md.version(p)} |")
     except md.PackageNotFoundError:

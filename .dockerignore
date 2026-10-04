@@ -4,9 +4,11 @@
 !scripts/
 !third_party/nccl/
 !third_party/pytorch_scatter/
+!third_party/pytorch_sparse/
 !third_party/openequivariance/
 !dist/*.whl
 **/.git
 third_party/nccl/build
 third_party/pytorch_scatter/build
+third_party/pytorch_sparse/build
 third_party/openequivariance/**/build

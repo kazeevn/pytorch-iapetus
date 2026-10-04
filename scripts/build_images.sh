@@ -11,7 +11,7 @@ RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-py312}"
 JOBS="${JOBS:-4}"
 TARGET="${1:-all}"
 
-git submodule update --init third_party/nccl third_party/pytorch_scatter third_party/openequivariance
+git submodule update --init --recursive third_party/nccl third_party/pytorch_scatter third_party/pytorch_sparse third_party/openequivariance
 
 if [[ "$TARGET" == builder || "$TARGET" == all ]]; then
     docker build -f docker/builder.Dockerfile --build-arg JOBS="$JOBS" -t "$BUILDER_TAG" .

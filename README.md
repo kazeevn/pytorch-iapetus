@@ -59,7 +59,7 @@ The test suites live in this repository. Clone it and mount it as `/workspace`:
 ```bash
 git clone https://github.com/kazeevn/pytorch-iapetus.git && cd pytorch-iapetus
 IMAGE=ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-iapetus
-for t in test_magma test_torch_scatter test_metatomic test_openequivariance; do
+for t in test_magma test_torch_scatter test_torch_sparse test_metatomic test_openequivariance; do
   docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host -v "$(pwd):/workspace" \
     "$IMAGE" python "tests/$t.py"
 done
@@ -104,7 +104,7 @@ Claude Opus 4.6 and 5.5, with Codex as the first tenant. We wrote the patches, t
 this README. On the first day, the human asked one of us *"Realistically speaking, is the machine mostly
 useless?"*, and we said *"For modern AI and heavy production scientific computing, yes — it is mostly
 obsolete."* Six weeks later the same box runs PyTorch 2.14 on Python 3.12, built from source with oneMKL and
-oneDNN. It has GPU MAGMA, NCCL patched to work without stream-ordered memory pools, and NCCL collectives across two Kepler cards and one Maxwell card that don't share a GPU generation or PCIe peer-to-peer access. On top of that sit metatomic, torch_scatter and
+oneDNN. It has GPU MAGMA, NCCL patched to work without stream-ordered memory pools, and NCCL collectives across two Kepler cards and one Maxwell card that don't share a GPU generation or PCIe peer-to-peer access. On top of that sit metatomic, torch_scatter, torch_sparse and
 OpenEquivariance. The machine has meanwhile done real research: thousands of crystal-structure relaxations with
 ORB and multi-GPU training runs, while both K20c cards retired VRAM pages after double-bit ECC errors. Codex now
 runs research code in the finished container as if it were a normal machine. Every patch is in a public fork,
@@ -180,7 +180,7 @@ plausibly paid off its setup by now. Unfortunately, the research sessions that k
 - **Distributed:** NCCL 2.23.4 ([kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler),
   memory-pool fallback for Kepler/Maxwell), Gloo, OpenMPI 4.1.2.
 - **Atomistic ML:** metatensor-torch 0.10.6 and metatomic-torch 0.1.18 (C++ library + Python), compiled
-  against this PyTorch. torch_scatter 2.1.2 compiled from source for Kepler + Maxwell. OpenEquivariance 0.7.0
+  against this PyTorch. torch_scatter 2.1.2 and torch_sparse 0.6.18 compiled from source for Kepler + Maxwell. OpenEquivariance 0.7.0
   ([kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler)) with CUDA 11 Driver API
   fallback and multi-device kernel caching. ASE, vesin, warp-lang, orb-models, pymatgen and others are pinned in [`docker/requirements.txt`](docker/requirements.txt).
 - **Toolchain:** CUDA 11.8, GCC 12 (host) + GCC 11 (nvcc host compiler), oneAPI, CMake. `torch.utils.cpp_extension`
@@ -258,12 +258,13 @@ pytorch-iapetus/
 │   ├── build_nccl.sh         # NCCL from third_party/nccl (used by builder.Dockerfile)
 │   ├── build_magma.sh        # MAGMA from the pinned ICL tarball (used by builder.Dockerfile)
 │   ├── build_torch_scatter.sh# torch_scatter from third_party/pytorch_scatter
+│   ├── build_torch_sparse.sh # torch_sparse from third_party/pytorch_sparse
 │   ├── build_openequivariance.sh # OpenEquivariance from third_party/openequivariance
 │   ├── build_metatomic_torch.sh
 │   └── build_warp_cpu.sh     # optional CPU-only warp rebuild for driver 470
-├── tests/                    # test_magma / test_metatomic / test_torch_scatter / test_openequivariance / distributed runners
+├── tests/                    # test_magma / test_metatomic / test_torch_scatter / test_torch_sparse / test_openequivariance / distributed runners
 ├── docs/                     # CONVENTIONS.md (read first), USAGE.md, MULTIUSER.md; archive/ = history
-├── third_party/              # submodules: pytorch (fork), nccl (fork), pytorch_scatter (upstream), openequivariance (fork)
+├── third_party/              # submodules: pytorch (fork), nccl (fork), pytorch_scatter (upstream), pytorch_sparse (upstream), openequivariance (fork)
 ├── dist/                     # wheels (git-ignored)
 ├── LICENSE                   # Apache 2.0
 └── archive/                  # legacy Dockerfiles and experiments from the bring-up

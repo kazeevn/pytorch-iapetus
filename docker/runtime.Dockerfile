@@ -24,6 +24,10 @@ COPY third_party/pytorch_scatter /tmp/pytorch_scatter
 COPY scripts/build_torch_scatter.sh /tmp/build_torch_scatter.sh
 RUN /tmp/build_torch_scatter.sh /tmp/pytorch_scatter && rm -rf /tmp/pytorch_scatter /tmp/build_torch_scatter.sh
 
+COPY third_party/pytorch_sparse /tmp/pytorch_sparse
+COPY scripts/build_torch_sparse.sh /tmp/build_torch_sparse.sh
+RUN /tmp/build_torch_sparse.sh /tmp/pytorch_sparse && rm -rf /tmp/pytorch_sparse /tmp/build_torch_sparse.sh
+
 COPY third_party/openequivariance /tmp/openequivariance
 COPY scripts/build_openequivariance.sh /tmp/build_openequivariance.sh
 RUN /tmp/build_openequivariance.sh /tmp/openequivariance && rm -rf /tmp/openequivariance /tmp/build_openequivariance.sh
