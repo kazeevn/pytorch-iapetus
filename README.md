@@ -231,7 +231,6 @@ cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 | `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, `:latest` | the newest cuDNN 8.7 release for PyTorch 2.14.0 / overall |
 | `iapetus/builder:cuda11.8-cudnn8.7-py312` | `docker/builder.Dockerfile` (local build tag) |
 | `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312` | `docker/runtime.Dockerfile` (local build tag) |
-| `iapetus/pytorch:2.14.0-cuda11.8-py312` | Existing image, kept for current users |
 
 ### Versions and releases
 
