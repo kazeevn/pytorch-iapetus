@@ -3,7 +3,7 @@
 #   scripts/release.sh <revision> [changes.md]
 #
 # Versions mirror the official pytorch/pytorch tags: <pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus-r<revision>,
-# e.g. 2.14.0-cuda11.8-cudnn8.7-iapetus-r3; the revision restarts at 1 for a new PyTorch version.
+# e.g. 2.14.1-cuda11.8-cudnn8.7-iapetus-r1; the revision restarts at 1 for a new PyTorch version.
 # The image is pushed as :<version> (immutable), :<pytorch>-cuda<cuda>-cudnn<cudnn>-iapetus (newest revision) and :latest;
 # the commit is tagged v<version>. changes.md (optional) is put at the top of the release notes.
 #
@@ -15,7 +15,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 REVISION="${1:?usage: scripts/release.sh <revision> [changes.md]}"
 CHANGES="${2:-}"
-RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
+RUNTIME_TAG="${RUNTIME_TAG:-iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312}"
 REPO="${REPO:-ghcr.io/kazeevn/pytorch}"
 
 [[ "$REVISION" =~ ^[1-9][0-9]*$ ]] || { echo "revision must be a positive integer" >&2; exit 1; }

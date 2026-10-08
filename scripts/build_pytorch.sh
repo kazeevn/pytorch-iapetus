@@ -50,8 +50,8 @@ export CXXFLAGS="-march=native"
 
 # Kepler sm_35 + Maxwell sm_50 only
 export TORCH_CUDA_ARCH_LIST="3.5;5.0"
-export PYTORCH_BUILD_VERSION="2.14.0"
-export PYTORCH_BUILD_NUMBER="3"
+export PYTORCH_BUILD_VERSION="2.14.1"
+export PYTORCH_BUILD_NUMBER="1"
 
 export MAX_JOBS="${MAX_JOBS:-4}"
 export USE_CUDA=1

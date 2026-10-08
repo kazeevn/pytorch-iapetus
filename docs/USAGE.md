@@ -2,17 +2,17 @@
 
 This guide documents how to use the custom-compiled **PyTorch 2.14** wheel and its accompanying Docker image. The reference machine has two Tesla K20c (Kepler `sm_35`) and one GeForce GTX 750 Ti (Maxwell `sm_50`); hardware requirements are listed in the [README](../README.md#will-it-run-on-my-machine).
 
-The examples use the published image `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, which follows the newest release for PyTorch 2.14.0. Pin `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` for the cuDNN 8.7 build (see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)). If you built the image yourself, use `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312`.
+The examples use the published image `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, which follows the newest release for PyTorch 2.14.0. Pin `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` for the cuDNN 8.7 build (see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)). If you built the image yourself, use `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312` (PyTorch 2.14.1).
 
 ---
 
 ## 1. Artifacts & Environment Overview
 
 * **Wheel File:**
-  Release `r3` includes `torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl` with cuDNN 8.7. This wheel needs the builder image's CUDA, cuDNN, NCCL, MAGMA, oneMKL and OpenMPI libraries.
+  Release `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` includes `torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl` with cuDNN 8.7; `scripts/build_pytorch.sh` builds `torch-2.14.1-cp312-cp312-linux_x86_64.whl`. These wheels need the builder image's CUDA, cuDNN, NCCL, MAGMA, oneMKL and OpenMPI libraries.
 * **Docker Image:**
   * `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus` *(published release; auto-detects host user UID/GID & GPU permissions)*
-  * `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312` *(local cuDNN build from `docker/runtime.Dockerfile`)*
+  * `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312` *(local cuDNN build from `docker/runtime.Dockerfile`)*
 * **Python Runtime:** Python 3.12 (managed via `uv` in `/opt/venv312`)
 * **CUDA Version:** CUDA 11.8 (Compatible with NVIDIA driver `470.256.02`)
 * **Target GPU Architectures:** Dual `sm_35` (Tesla K20c) + `sm_50` (GeForce GTX 750 Ti)
@@ -125,13 +125,13 @@ docker run --rm \
 
 ## 4. Method 2: Installing the Wheel into Any CUDA 11.8 / Python 3.12 Container
 
-Download the `post3` wheel from release `r3`, or build it with `scripts/build_pytorch.sh` using the local
+Download the `2.14.0.post3` wheel from release `r3`, or build the 2.14.1 wheel with `scripts/build_pytorch.sh` using the local
 `iapetus/builder` image. To use a different base image or custom Docker container:
 
 1. **Volume Mount the Wheel Directory:** Mount the repository's `dist/` into the container.
 2. **Install the Wheel:**
    ```bash
-   pip install /dist/torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl
+   pip install /dist/torch-2.14.1-cp312-cp312-linux_x86_64.whl
    ```
 
 ### Complete Docker Command Example:
@@ -144,7 +144,7 @@ docker run --rm \
   -v "$(pwd):/workspace" \
   iapetus/builder:cuda11.8-cudnn8.7-py312 \
   bash -c '
-    /opt/venv312/bin/pip install --no-deps -q /dist/torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl
+    /opt/venv312/bin/pip install --no-deps -q /dist/torch-2.14.1-cp312-cp312-linux_x86_64.whl
     /opt/venv312/bin/python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.backends.cudnn.version())"
   '
 ```

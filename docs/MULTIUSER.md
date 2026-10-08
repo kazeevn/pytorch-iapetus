@@ -78,7 +78,7 @@ CMD ["bash"]
 ### 3.3. Build Command
 
 ```bash
-scripts/build_images.sh runtime   # tags iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312
+scripts/build_images.sh runtime   # tags iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312
 ```
 
 ---

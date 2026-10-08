@@ -56,7 +56,7 @@ commit, or a release URL plus sha256 checked in the build script.
 
 | Component | Source | Pin | Patched? |
 | :--- | :--- | :--- | :--- |
-| PyTorch 2.14.0 | [kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.0-kepler) → `third_party/pytorch` | branch `v2.14.0-kepler` | yes |
+| PyTorch 2.14.1 | [kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.1-kepler) → `third_party/pytorch` | branch `v2.14.1-kepler` | yes |
 | cuDNN frontend 0.9.2 | NVIDIA upstream → `third_party/pytorch/third_party/cudnn_frontend` | tag `v0.9.2` (commit `12f35fa2`) | no (upstream submodule pin in PyTorch fork) |
 | NCCL 2.23.4 | [kazeevn/nccl](https://github.com/kazeevn/nccl/tree/v2.23.4-kepler) → `third_party/nccl` | branch `v2.23.4-kepler` | yes |
 | torch_scatter 2.1.2 | upstream `rusty1s/pytorch_scatter` → `third_party/pytorch_scatter` (`scripts/build_torch_scatter.sh`) | commit `f514c10` | no (unpatched) |
@@ -125,12 +125,13 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 
 | Item | Status |
 | :--- | :--- |
-| `dist/torch-2.14.0.post2` wheel | Built **before** these conventions (GCC 11 host, old builder, no cuDNN). Retained as the existing artifact; `scripts/build_pytorch.sh` now builds `post3` with cuDNN 8.7 |
+| `dist/torch-2.14.0.post2` wheel | Built **before** these conventions (GCC 11 host, old builder, no cuDNN). Retained as the existing artifact |
 | `dist/torch-2.14.0.post3` wheel | Built on 2026-10-04 with CUDA 11.8, cuDNN 8.7, and frontend 0.9.2; `libtorch_cuda.so` links to `libcudnn.so.8` |
+| `dist/torch-2.14.1` wheel | `scripts/build_pytorch.sh` builds it from branch `v2.14.1-kepler`: the three `v2.14.0-kepler` patches rebased unchanged onto upstream `v2.14.1` (whose changes are MPS fixes, CI and the version bump) |
 | cuDNN 8.7 | Builder installs and holds `libcudnn8` and `libcudnn8-dev` at `8.7.0.84-1+cuda11.8`; PyTorch has `USE_CUDNN=1`, and the runtime image reports version 8700. Forward and backward convolution passed on both Kepler K20c GPUs and the Maxwell GTX 750 Ti |
-| cuDNN frontend 0.9.2 | PyTorch fork commit `87cf5664` pins upstream frontend `12f35fa2`; frontend header and PyTorch's convolution, MHA, quantized convolution/linear, and CUDA hooks translation units compile with CUDA 11.8 and cuDNN 8.7 |
-| `torch.utils.cpp_extension` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): defaults nvcc to `-std=c++17` on CUDA < 12 and uses `$CUDAHOSTCXX` for `-ccbin` |
-| `torch/csrc/autograd/edge.h` | Patched in `kazeevn/pytorch_kepler` (commit `6fb679f`): uses `static_cast<bool>(function)` and adds `operator!=`/`==` with `nullptr` in `intrusive_ptr.h` for C++17 compatibility |
+| cuDNN frontend 0.9.2 | PyTorch fork commit `e9fe9928` pins upstream frontend `12f35fa2`; frontend header and PyTorch's convolution, MHA, quantized convolution/linear, and CUDA hooks translation units compile with CUDA 11.8 and cuDNN 8.7 |
+| `torch.utils.cpp_extension` | Patched in `kazeevn/pytorch_kepler` (commit `55006b9`): defaults nvcc to `-std=c++17` on CUDA < 12 and uses `$CUDAHOSTCXX` for `-ccbin` |
+| `torch/csrc/autograd/edge.h` | Patched in `kazeevn/pytorch_kepler` (commit `55006b9`): uses `static_cast<bool>(function)` and adds `operator!=`/`==` with `nullptr` in `intrusive_ptr.h` for C++17 compatibility |
 | `torch_scatter` 2.1.2 | Compiled from submodule `third_party/pytorch_scatter` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_scatter.sh`) and included in the runtime image |
 | `torch_sparse` 0.6.18 | Compiled from submodule `third_party/pytorch_sparse` for `sm_35` + `sm_50` against our PyTorch wheel (`scripts/build_torch_sparse.sh`) and included in the runtime image |
 | OpenEquivariance 0.7.0 | Patched in [kazeevn/OpenEquivariance](https://github.com/kazeevn/OpenEquivariance/tree/v0.7.0-kepler) (branch `v0.7.0-kepler`): CUDA 11 Driver API fallback (`CUmodule`), NVRTC 11.8 flag compatibility, multi-device/multi-architecture kernel caching, and installed LibTorch C ABI detection. Compiled from `third_party/openequivariance` and included in the runtime image |

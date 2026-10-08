@@ -2,7 +2,7 @@
 # Runs a curated subset of the official PyTorch unit tests inside the runtime image.
 set -e
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${IMAGE:-iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312}"
+IMAGE="${IMAGE:-iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312}"
 
 echo "=== Running Official PyTorch Unit Tests ($IMAGE) ==="
 

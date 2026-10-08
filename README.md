@@ -172,7 +172,7 @@ plausibly paid off its setup by now. Unfortunately, the research sessions that k
 
 ## What's inside
 
-- **PyTorch 2.14.0** ([kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.0-kepler)):
+- **PyTorch 2.14.1** ([kazeevn/pytorch_kepler](https://github.com/kazeevn/pytorch_kepler/tree/v2.14.1-kepler)):
   CUDA 11.8 support restored, C++17 fallbacks in CUDA-visible code, NVRTC `--std=c++17` on CUDA < 12,
   analytic 2×2/3×3 determinants. The current build uses cuDNN 8.7, the last release supporting Kepler,
   with PyTorch's nested cuDNN frontend pinned to upstream v0.9.2 for CUDA 11.8 compatibility.
@@ -215,12 +215,12 @@ git submodule update --init third_party/pytorch   # large; only needed to rebuil
 git -C third_party/pytorch submodule update --init --recursive   # only for a full PyTorch rebuild
 
 scripts/build_images.sh builder    # iapetus/builder:cuda11.8-cudnn8.7-py312 (compiles NCCL + MAGMA)
-scripts/build_pytorch.sh           # PyTorch 2.14.0.post3 wheel → dist/ (runs inside the builder)
-scripts/build_images.sh runtime    # iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312 (needs post3 wheel)
+scripts/build_pytorch.sh           # PyTorch 2.14.1 wheel → dist/ (runs inside the builder)
+scripts/build_images.sh runtime    # iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312 (needs the 2.14.1 wheel)
 ```
 
 Published PyTorch wheels are attached to [GitHub Releases](https://github.com/kazeevn/pytorch-iapetus/releases).
-The `post3` wheel is attached to release `r3`. It is not self-contained: it needs the CUDA 11.8,
+The `2.14.0.post3` wheel is attached to release `2.14.0-…-r3`. The wheels are not self-contained: it needs the CUDA 11.8,
 cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 
 ### Images
@@ -230,7 +230,7 @@ cuDNN 8.7, NCCL, MAGMA, oneMKL and OpenMPI libraries from the builder image.
 | `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus-r<N>` | a published cuDNN 8.7 release of `iapetus/pytorch`; never changes |
 | `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, `:latest` | the newest cuDNN 8.7 release for PyTorch 2.14.0 / overall |
 | `iapetus/builder:cuda11.8-cudnn8.7-py312` | `docker/builder.Dockerfile` (local build tag) |
-| `iapetus/pytorch:2.14.0-cuda11.8-cudnn8.7-py312` | `docker/runtime.Dockerfile` (local build tag) |
+| `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312` | `docker/runtime.Dockerfile` (local build tag) |
 
 ### Versions and releases
 

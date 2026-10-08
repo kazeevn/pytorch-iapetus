@@ -1,5 +1,5 @@
 """
-Test MAGMA GPU linear algebra acceleration in PyTorch 2.14.0.
+Test MAGMA GPU linear algebra acceleration in PyTorch 2.14.
 Verifies that MAGMA is linked and enabled (torch.cuda.has_magma == True),
 and validates non-symmetric eigendecomposition (torch.linalg.eig) and
 related dense linear algebra operations on GPU.
