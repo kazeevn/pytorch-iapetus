@@ -2,16 +2,16 @@
 
 This guide documents how to use the custom-compiled **PyTorch 2.14** wheel and its accompanying Docker image. The reference machine has two Tesla K20c (Kepler `sm_35`) and one GeForce GTX 750 Ti (Maxwell `sm_50`); hardware requirements are listed in the [README](../README.md#will-it-run-on-my-machine).
 
-The examples use the published image `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus`, which follows the newest release for PyTorch 2.14.0. Pin `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` for the cuDNN 8.7 build (see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)). If you built the image yourself, use `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312` (PyTorch 2.14.1).
+The examples use the published image `ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus`, which follows the newest release for PyTorch 2.14.1. Pin `2.14.1-cuda11.8-cudnn8.7-iapetus-r1` for reproducible work (see [Releases](https://github.com/kazeevn/pytorch-iapetus/releases)). If you built the image yourself, use `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312`.
 
 ---
 
 ## 1. Artifacts & Environment Overview
 
 * **Wheel File:**
-  Release `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` includes `torch-2.14.0.post3-cp312-cp312-linux_x86_64.whl` with cuDNN 8.7; `scripts/build_pytorch.sh` builds `torch-2.14.1-cp312-cp312-linux_x86_64.whl`. These wheels need the builder image's CUDA, cuDNN, NCCL, MAGMA, oneMKL and OpenMPI libraries.
+  Release `2.14.1-cuda11.8-cudnn8.7-iapetus-r1` includes `torch-2.14.1-cp312-cp312-linux_x86_64.whl` with cuDNN 8.7, built by `scripts/build_pytorch.sh`. This wheel needs the builder image's CUDA, cuDNN, NCCL, MAGMA, oneMKL and OpenMPI libraries.
 * **Docker Image:**
-  * `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus` *(published release; auto-detects host user UID/GID & GPU permissions)*
+  * `ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus` *(published release; auto-detects host user UID/GID & GPU permissions)*
   * `iapetus/pytorch:2.14.1-cuda11.8-cudnn8.7-py312` *(local cuDNN build from `docker/runtime.Dockerfile`)*
 * **Python Runtime:** Python 3.12 (managed via `uv` in `/opt/venv312`)
 * **CUDA Version:** CUDA 11.8 (Compatible with NVIDIA driver `470.256.02`)
@@ -22,7 +22,7 @@ The examples use the published image `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cu
 * **Compilers:** GCC 12 for host code (C++20), nvcc 11.8 with GCC 11 for CUDA code (C++17); see [`CONVENTIONS.md`](CONVENTIONS.md)
 * **NVRTC / JIT:** Custom patch dynamically using `--std=c++17` on CUDA < 12.0 drivers, allowing runtime JIT and TorchScript fusers to execute on Driver 470
 * **Small Matrix Determinants:** Fast-path analytic closed-form determinants for 2x2 and 3x3 matrices with full autograd differentiability
-* **cuDNN:** 8.7.0.84 (`USE_CUDNN=1`) in release `r3`, the last release supporting both Kepler `sm_35` and Maxwell `sm_50`. Releases `r1` and `r2` have cuDNN disabled.
+* **cuDNN:** 8.7.0.84 (`USE_CUDNN=1`), the last release supporting both Kepler `sm_35` and Maxwell `sm_50`. The PyTorch 2.14.0 releases `2.14.0-cuda11.8-iapetus-r1` and `r2` have cuDNN disabled.
 * **Distributed Backends Enabled:**
   * **NCCL 2.23.4** (custom-built with stream-ordered memory pool fallback for legacy GPUs)
   * **Gloo** (CPU and multi-GPU CUDA)
@@ -45,12 +45,12 @@ When running containers with this build, the following flags are required:
 
 ## 3. Method 1: Using the Ready-to-Run Docker Image (Recommended)
 
-The image `ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus` has PyTorch 2.14, Python 3.12, NCCL 2.23.4, and OpenMPI installed and configured in `PATH`.
+The image `ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus` has PyTorch 2.14, Python 3.12, NCCL 2.23.4, and OpenMPI installed and configured in `PATH`.
 
 ### Quick Health Check
 ```bash
 docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   python -c "
 import torch, torch.distributed as dist
 print('PyTorch Version :', torch.__version__)
@@ -74,7 +74,7 @@ docker run --rm -it \
   --ipc=host \
   -v "$(pwd):/workspace" \
   -w /workspace \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   bash
 ```
 
@@ -91,7 +91,7 @@ docker run --rm \
   --ipc=host \
   -v "$(pwd):/workspace" \
   -w /workspace \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   python my_script.py
 ```
 
@@ -104,7 +104,7 @@ docker run --rm \
   --ipc=host \
   -v "$(pwd):/workspace" \
   -w /workspace \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   torchrun --nproc_per_node=3 train.py
 ```
 
@@ -117,7 +117,7 @@ docker run --rm \
   --ipc=host \
   -v "$(pwd):/workspace" \
   -w /workspace \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   mpirun --allow-run-as-root -n 3 python mpi_train.py
 ```
 
@@ -125,7 +125,7 @@ docker run --rm \
 
 ## 4. Method 2: Installing the Wheel into Any CUDA 11.8 / Python 3.12 Container
 
-Download the `2.14.0.post3` wheel from release `r3`, or build the 2.14.1 wheel with `scripts/build_pytorch.sh` using the local
+Download the wheel from release `2.14.1-cuda11.8-cudnn8.7-iapetus-r1`, or build it with `scripts/build_pytorch.sh` using the local
 `iapetus/builder` image. To use a different base image or custom Docker container:
 
 1. **Volume Mount the Wheel Directory:** Mount the repository's `dist/` into the container.
@@ -164,7 +164,7 @@ Validates `torch.cuda.has_magma`, non-symmetric eigendecomposition (`torch.linal
 ```bash
 docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   python tests/test_magma.py
 ```
 *(Result: All MAGMA tests passed successfully)*
@@ -186,7 +186,7 @@ Executes the comprehensive 7-stage test suite covering versions, C++ headers, sh
 ```bash
 docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
   -v "$(pwd):/workspace" \
-  ghcr.io/kazeevn/pytorch:2.14.0-cuda11.8-cudnn8.7-iapetus \
+  ghcr.io/kazeevn/pytorch:2.14.1-cuda11.8-cudnn8.7-iapetus \
   python tests/test_metatomic.py
 ```
 *(Result: 7/7 test stages passed successfully)*
@@ -195,7 +195,7 @@ docker run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all --ipc=host \
 
 ## 6. Metatomic-Torch Atomistic ML Guide
 
-The container includes custom-built **`metatomic-torch 0.1.18`** and **`metatensor-torch 0.10.6`** compiled directly against its installed PyTorch wheel (`post3` in release `r3`).
+The container includes custom-built **`metatomic-torch 0.1.18`** and **`metatensor-torch 0.10.6`** compiled directly against its installed PyTorch wheel (`torch-2.14.1` in release `r1`).
 
 ### Python Quickstart
 ```python

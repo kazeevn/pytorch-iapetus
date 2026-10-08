@@ -32,7 +32,7 @@ the code, and their links and paths may be stale.
 
 **Releases.** Versions mirror the official `pytorch/pytorch` tags with `iapetus` as the variant:
 `<PyTorch>-cuda<CUDA>-cudnn<cuDNN>-iapetus-r<revision>` (for example,
-`2.14.0-cuda11.8-cudnn8.7-iapetus-r3`). Bump the revision for any change to the published image;
+`2.14.1-cuda11.8-cudnn8.7-iapetus-r1`). Bump the revision for any change to the published image;
 restart at `r1` with a new PyTorch version. `scripts/release.sh <revision>` pushes the runtime image
 to `ghcr.io/kazeevn/pytorch` as `:<version>` (immutable),
 `:<PyTorch>-cuda<CUDA>-cudnn<cuDNN>-iapetus` and `:latest`, tags the commit `v<version>`, and creates a GitHub Release with the image digest, component
@@ -138,4 +138,5 @@ C++17 and fork it under rule (b). Host-only C++20 is fine.
 | Images (`iapetus/builder`, `iapetus/pytorch`) | Current `cuda11.8-cudnn8.7-py312` builder and `2.14.1` runtime images built on 2026-10-08; runtime imports all source extensions and passes cuDNN convolution (forward and backward) and MAGMA `torch.linalg.eig` on both K20c GPUs and the GTX 750 Ti |
 | Release `2.14.0-cuda11.8-iapetus-r1` (`ghcr.io/kazeevn/pytorch`) | `iapetus/pytorch` of 2026-10-01 plus source/description/title labels, released with `FORCE=1`: it predates the `revision` label, so it is not tied to a commit by label. It contains the pre-conventions torch wheel listed above |
 | Release `2.14.0-cuda11.8-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | cuDNN 8.7 runtime with `post3` wheel, built from commit `e4d54db` and retained under its original tag |
-| Release `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | Current cuDNN 8.7 release with the official-style tag, `post3` wheel, and a revision label matching its Git tag |
+| Release `2.14.0-cuda11.8-cudnn8.7-iapetus-r3` (`ghcr.io/kazeevn/pytorch`) | Last PyTorch 2.14.0 release: cuDNN 8.7 with the official-style tag, `post3` wheel, and a revision label matching its Git tag |
+| Release `2.14.1-cuda11.8-cudnn8.7-iapetus-r1` (`ghcr.io/kazeevn/pytorch`) | Current release: PyTorch 2.14.1 with cuDNN 8.7, `torch-2.14.1` wheel, and a revision label matching its Git tag |
